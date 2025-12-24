@@ -26,7 +26,7 @@ The bot is configured using environment variables on Render. You will need to se
     *   **Branch:** `master` (or `main`).
     *   **Runtime:** `Python 3`.
     *   **Build Command:** `pip install -r requirements.txt`.
-    *   **Start Command:** `gunicorn app:app` (This is important! Make sure this is set correctly).
+    *   **Start Command:** `gunicorn --access-logfile /dev/null --error-logfile - app:app` (This is important! Make sure this is set correctly).
     *   **Instance Type:** `Free`.
 
 4.  **Add Environment Variables:**
