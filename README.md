@@ -1,49 +1,101 @@
-[![Bot Test](https://github.com/Minionguyjpro/Afk-bot/actions/workflows/test.yml/badge.svg)](https://github.com/Minionguyjpro/Afk-bot/actions/workflows/test.yml) [![GitHub package.json version (branch)](https://img.shields.io/github/package-json/v/minionguyjpro/afk-bot/master)](https://github.com/Minionguyjpro/Afk-bot/blob/master/package.json)
-# THE GITHUB ACTION SHOULD NOW WORK!
-# Afk-bot
-A bot to stay AFK on Minecraft servers.
----
+# Minecraft AFK Bot for Render
 
-### Example Usage
-Place the following in for example `/.github/workflows/main.yml`:
-```yml
-on: push
-name: Run the AFK-Bot
-jobs:
-  join:
-    name: Join the server
-    runs-on: ubuntu-latest
-    steps:
-    - name: Start Afk-bot
-      uses: Minionguyjpro/Afk-bot@v1.0.3
-      with:
-        ip: example.ip.org
-        name: AFKBOT
-        port: 25565
-        auto-night-skip: true
-```
+This is a simple Python script that connects to a Minecraft server and stays AFK. It is designed to be deployed on [Render's](https://render.com/) free tier, which allows for 24/7 uptime using a keep-alive service.
 
----
+The bot runs in a background thread, while a lightweight Flask web server runs in the main thread. The web server provides a single endpoint for a keep-alive service to ping, preventing Render's free instance from spinning down due to inactivity.
 
-## Settings
-Keys can be added directly to your .yml config file or referenced from your project `Secrets` storage.
+## Configuration (Environment Variables)
 
-**Optional**: hide you server by adding secrets. To add a `secret` go to the `Settings` tab in your project then select `Secrets`.
-I strongly recommend you store your `ip` and `port` as a secret, in case you want to hide it.
+The bot is configured using environment variables on Render. You will need to set the following:
 
-| Key Name                | Required | Example                       | Default Value                 | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
-|-------------------------|----------|-------------------------------|-------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `ip`                | Yes      | `example.ip.org`         | `example.ip.org`                              | Server IP to connect to                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
-| `port`              | No      | `25567`    | `25565`                               | Port for the server to connect, requires an IP                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
-| `name`              | No      | `AFK`    | `afkbot`                              | Name that the bot gets when joining the server                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| `auto-night-skip`                  | No       | `true`                         | `false`                          | Automatically skips the night in the Minecraft server if the bot has permissions                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |                                                                                                                                                                                                                                                                                                                                                                                        |
+*   `MC_SERVER_ADDRESS`: The address of the Minecraft server (e.g., `mc.example.com`).
+*   `MC_USERNAME`: The username for the bot to use.
+*   `MC_SERVER_PORT` (Optional): The port of the Minecraft server. Defaults to `25565` if not set.
 
-# All features
-- ### Auto Skip Night
-Let the bot automatically skip the night if it has permissions.
-To enable this, go to config.json file and change 
-``auto-night-skip`` from ``false`` to ``true``. If you dont want this anymore you could change it back to ``false``.
-- ### 24/7 Aternos server
-You can also make an Aternos 24/7 server with this.
-Just make a template of this repository, then go to Heroku and make an account if you don't have already. Now create an app on Heroku. Then deploy/connect your repository from Github, then deploy branch. Now start your Aternos server, then go back to Heroku. Now go to Resources and refresh the page. Then enable "worker node index.js".
-Now the bot should join the server. It can cost 5-30 seconds. And now go also on the server, now give it creative and put it in an hole underground with torches. Now enjoy your free 24/7 Aternos server!
+## How to Deploy on Render
+
+1.  **Fork this Repository:** Click the "Fork" button at the top-right of this page to create your own copy.
+
+2.  **Create a Render Account:** Sign up for a free account at [render.com](https://render.com/).
+
+3.  **Create a New Web Service:**
+    *   From your Render dashboard, click **"New +"** and select **"Web Service"**.
+    *   Connect your GitHub account and select your forked repository.
+    *   Give your service a unique name (e.g., `my-afk-bot`).
+    *   **Region:** Choose a region close to you.
+    *   **Branch:** `master` (or `main`).
+    *   **Runtime:** `Python 3`.
+    *   **Build Command:** `pip install -r requirements.txt`.
+    *   **Start Command:** `gunicorn --access-logfile /dev/null --error-logfile - app:app` (This is important! Make sure this is set correctly).
+    *   **Instance Type:** `Free`.
+
+4.  **Add Environment Variables:**
+    *   Before creating the service, click **"Advanced Settings"**.
+    *   Click **"Add Environment Variable"** and add your Minecraft server details (`MC_SERVER_ADDRESS`, `MC_USERNAME`, etc.).
+
+5.  **Deploy:**
+    *   Click **"Create Web Service"** at the bottom of the page. Render will now build and deploy your bot.
+    *   Once the deployment is live, copy your service's URL (e.g., `https://my-afk-bot.onrender.com`). You will need this for the next step.
+
+## Setting Up a Keep-Alive Service (Required for Free Tier)
+
+Render's free web services spin down after 15 minutes of inactivity. To keep your bot running 24/7, you must use an external service to ping your bot's URL every 15 minutes or less.
+
+Here are two free methods to do this. You only need to choose one.
+
+### Method 1: UptimeRobot (Easiest)
+
+1.  **Create a free account** at [uptimerobot.com](https://uptimerobot.com/).
+2.  From your dashboard, click **"Add New Monitor"**.
+3.  **Monitor Type:** `HTTP(s)`.
+4.  **Friendly Name:** Give it a name (e.g., "Minecraft Bot Keep-Alive").
+5.  **URL (or IP):** Paste your Render service URL.
+6.  **Monitoring Interval:** Set it to **15 minutes** or less.
+7.  Click **"Create Monitor"**. That's it! UptimeRobot will now keep your bot online.
+
+### Method 2: Google Cloud Scheduler (More Advanced)
+
+This method uses a free-tier Google Cloud Function that is triggered by the free-tier Google Cloud Scheduler.
+
+#### Step A: Create a Google Cloud Function
+1.  Go to the [Google Cloud Console](https://console.cloud.google.com/) and create a new project if you don't have one.
+2.  Navigate to **"Cloud Functions"** and click **"Create Function"**.
+3.  **Function name:** `render-pinger`.
+4.  **Region:** Choose a region.
+5.  **Trigger type:** `HTTP`.
+6.  **Authentication:** Select **"Allow unauthenticated invocations"**.
+7.  Click **"Next"**.
+8.  **Runtime:** `Python 3.10` (or newer).
+9.  **Source code:** Inline Editor.
+10. **Entry point:** `handler`.
+11. In the `requirements.txt` file, add: `requests`.
+12. In the `main.py` file, paste the following code, replacing `'YOUR_RENDER_URL_HERE'` with your bot's actual Render URL:
+    ```python
+    import requests
+
+    def handler(request):
+        try:
+            # Replace with your Render service URL
+            url = 'YOUR_RENDER_URL_HERE'
+            response = requests.get(url, timeout=10)
+            print(f"Pinged {url}, status code: {response.status_code}")
+            return f"Success: {response.status_code}", 200
+        except requests.RequestException as e:
+            print(f"Error pinging {url}: {e}")
+            return f"Error: {e}", 500
+    ```
+13. Click **"Deploy"**. Once deployed, copy the function's **Trigger URL**.
+
+#### Step B: Create a Cloud Scheduler Job
+1.  In the Google Cloud Console, navigate to **"Cloud Scheduler"**.
+2.  Click **"Create Job"**.
+3.  **Name:** `ping-render-bot`.
+4.  **Region:** Choose the same region as your function.
+5.  **Frequency:** Enter `*/15 * * * *` (this is cron syntax for "every 15 minutes").
+6.  **Timezone:** Select your timezone.
+7.  **Target type:** `HTTP`.
+8.  **URL:** Paste the **Trigger URL** of your Cloud Function.
+9.  **HTTP method:** `GET`.
+10. Click **"Create"**.
+
+Your bot is now fully configured to run 24/7 on Render's free tier!

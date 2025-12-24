@@ -1,1 +1,1 @@
-worker: node index.js
+web: gunicorn --access-logfile /dev/null --error-logfile - app:app
