@@ -20,9 +20,20 @@ def hello_world():
 
 # --- Minecraft Bot Setup ---
 class AFKBotProtocol(ClientProtocol):
+    def connection_made(self):
+        """Called when a connection is established."""
+        super().connection_made()
+        log.info("Connection established to server, sending handshake...")
+
+    def packet_login_success(self, buff):
+        """Called after the server confirms a successful login."""
+        super().packet_login_success(buff)
+        log.info("Login successful! Waiting to join the world...")
+
     def player_joined(self, data):
+        """Called when the player has spawned in the world."""
         super().player_joined(data)
-        log.info("Successfully joined the server!")
+        log.info("Player has successfully joined the server and is now AFK.")
 
     def connection_lost(self, reason):
         super().connection_lost(reason)
@@ -34,7 +45,7 @@ class AFKBotFactory(ClientFactory):
 
     def __init__(self):
         super().__init__()
-        self.reconnect_delay = 30
+        self.reconnect_delay = 1  # Reconnect delay in seconds
 
     def clientConnectionFailed(self, connector, reason):
         log.error("Connection failed: %s", reason.getErrorMessage())
@@ -45,7 +56,7 @@ class AFKBotFactory(ClientFactory):
         self.retry(connector)
 
     def retry(self, connector):
-        log.info("Reconnecting in %d seconds...", self.reconnect_delay)
+        log.info(f"Reconnecting in {self.reconnect_delay} second(s)...")
         reactor.callLater(self.reconnect_delay, connector.connect)
 
 def start_minecraft_bot():
@@ -70,20 +81,12 @@ def start_minecraft_bot():
 
 # --- Main Execution ---
 
-# The Twisted reactor runs in a background thread.
-# This allows the Flask app (run by Gunicorn) to be the main process.
 if not reactor.running:
-    # Use a daemon thread so it exits when the main thread (Gunicorn) exits.
-    # installSignalHandlers=False is crucial for running in a thread.
     threading.Thread(target=reactor.run, args=(False,), daemon=True).start()
     log.info("Twisted reactor started in a background thread.")
 
-# Schedule the bot to start once the reactor is running.
 reactor.callWhenRunning(start_minecraft_bot)
 
 if __name__ == "__main__":
-    # This block is for local testing only.
-    # On Render, Gunicorn runs the 'app' object directly.
-    # The bot will start automatically due to the module-level code above.
     log.info("Starting Flask development server for local testing.")
     app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 8080)))

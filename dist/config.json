@@ -1,6 +1,0 @@
-{
-	"ip":"$IP",
-	"port": "$PORT",
-	"name": "$NAME",
-	"auto-night-skip":"$AUTO-NIGHT-SKIP"
-}
