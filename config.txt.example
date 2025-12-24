@@ -1,0 +1,12 @@
+# Minecraft AFK Bot Configuration
+#
+# Copy this file to config.txt and fill in your server details.
+
+# The address of the Minecraft server (e.g., mc.example.com)
+MC_SERVER_ADDRESS = your_server_address_here
+
+# The port of the Minecraft server (defaults to 25565 if commented out)
+# MC_SERVER_PORT = 25565
+
+# The username for the bot to use
+MC_USERNAME = YourBotUsername

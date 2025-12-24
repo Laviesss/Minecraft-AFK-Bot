@@ -36,14 +36,30 @@ class AFKBotFactory(ClientFactory):
         logging.info("Reconnecting in %d seconds...", self.reconnect_delay)
         reactor.callLater(self.reconnect_delay, connector.connect)
 
+def get_config():
+    """Reads configuration from config.txt"""
+    config = {}
+    try:
+        with open("config.txt", "r") as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith('#'):
+                    key, value = line.split('=', 1)
+                    config[key.strip()] = value.strip()
+    except FileNotFoundError:
+        logging.error("Error: config.txt not found. Please create it from config.txt.example.")
+        sys.exit(1)
+    return config
+
 def main():
-    # Get configuration from environment variables
-    server_address = os.environ.get("MC_SERVER_ADDRESS")
-    server_port = int(os.environ.get("MC_SERVER_PORT", 25565))
-    username = os.environ.get("MC_USERNAME")
+    # Get configuration from config.txt
+    config = get_config()
+    server_address = config.get("MC_SERVER_ADDRESS")
+    server_port = int(config.get("MC_SERVER_PORT", 25565))
+    username = config.get("MC_USERNAME")
 
     if not server_address or not username:
-        logging.error("MC_SERVER_ADDRESS and MC_USERNAME environment variables are required.")
+        logging.error("MC_SERVER_ADDRESS and MC_USERNAME must be set in config.txt.")
         sys.exit(1)
 
     factory = AFKBotFactory()
