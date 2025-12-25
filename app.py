@@ -6,8 +6,11 @@ from flask import Flask
 from twisted.internet import reactor
 from quarry.net.client import ClientFactory, ClientProtocol
 
-# Configure logging for verbose output
-logging.basicConfig(stream=sys.stdout, level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+# --- Logging Configuration ---
+# Gunicorn captures stdout, so we configure logging to use stderr for clear separation.
+# The log level is set to INFO for production and DEBUG for local development.
+log_level = logging.DEBUG if os.environ.get('FLASK_ENV') == 'development' else logging.INFO
+logging.basicConfig(stream=sys.stderr, level=log_level, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 log = logging.getLogger(__name__)
 
 # --- Flask Web Server Setup ---
@@ -15,49 +18,51 @@ app = Flask(__name__)
 
 @app.route('/')
 def hello_world():
-    """Keep-alive endpoint."""
+    """A simple keep-alive endpoint for Render's free tier."""
     return 'AFK bot is running.'
 
-# --- Minecraft Bot Setup ---
+# --- Minecraft Bot Implementation ---
 class AFKBotProtocol(ClientProtocol):
+    """Handles the bot's connection state and logs key events."""
     def connection_made(self):
-        """Called when a connection is established."""
         super().connection_made()
-        log.info("Connection established to server, sending handshake...")
+        log.info("Connection established. Sending handshake and login packets...")
 
     def packet_login_success(self, buff):
-        """Called after the server confirms a successful login."""
         super().packet_login_success(buff)
-        log.info("Login successful! Waiting to join the world...")
+        log.info("Login successful! The bot will now join the server.")
 
     def player_joined(self, data):
-        """Called when the player has spawned in the world."""
         super().player_joined(data)
-        log.info("Player has successfully joined the server and is now AFK.")
+        log.info(f"Successfully joined the server as '{self.factory.profile.display_name}' and is now AFK.")
 
     def connection_lost(self, reason):
+        log.warning("Connection lost: %s", reason.getErrorMessage())
         super().connection_lost(reason)
-        log.warning("Connection lost: %s", reason.value)
-
 
 class AFKBotFactory(ClientFactory):
+    """Manages the bot's protocol and implements a reconnection strategy."""
     protocol = AFKBotProtocol
-
-    def __init__(self):
-        super().__init__()
-        self.reconnect_delay = 1  # Reconnect delay in seconds
+    reconnect_delay = 5  # Start with a 5-second reconnect delay.
 
     def clientConnectionFailed(self, connector, reason):
         log.error("Connection failed: %s", reason.getErrorMessage())
         self.retry(connector)
 
     def clientConnectionLost(self, connector, reason):
-        log.warning("Connection lost: %s", reason.getErrorMessage())
+        # Logging is handled in AFKBotProtocol.connection_lost.
         self.retry(connector)
 
     def retry(self, connector):
+        """Implements an exponential backoff for reconnection attempts."""
         log.info(f"Reconnecting in {self.reconnect_delay} second(s)...")
         reactor.callLater(self.reconnect_delay, connector.connect)
+        self.reconnect_delay = min(self.reconnect_delay * 2, 300) # Exponential backoff up to 5 mins
+
+    def buildProtocol(self, addr):
+        # Reset the reconnect delay after a successful connection.
+        self.reconnect_delay = 5
+        return super().buildProtocol(addr)
 
 def start_minecraft_bot():
     """Configures and starts the Minecraft bot connection."""
@@ -66,27 +71,29 @@ def start_minecraft_bot():
     username = os.environ.get("MC_USERNAME")
 
     if not server_address or not username:
-        log.error("MC_SERVER_ADDRESS and MC_USERNAME env vars are required. Bot not starting.")
+        log.error("Missing required environment variables (MC_SERVER_ADDRESS, MC_USERNAME). The bot will not start.")
         return
+
+    log.info(f"Attempting to connect to '{server_address}:{server_port}' as '{username}' in offline mode.")
 
     factory = AFKBotFactory()
     factory.profile.display_name = username
 
-    log.info(f"Attempting to connect to {server_address}:{server_port} as {username}")
-    try:
-        reactor.connectTCP(server_address, server_port, factory)
-        log.debug("reactor.connectTCP call was successful.")
-    except Exception as e:
-        log.critical(f"An unexpected error occurred when trying to connect: {e}")
+    reactor.connectTCP(server_address, server_port, factory)
 
-# --- Main Execution ---
+# --- Bot Initialization and Main Execution ---
+def initialize_bot():
+    """Starts the Twisted reactor in a background thread if it's not already running."""
+    if not reactor.running:
+        log.info("Starting the Twisted reactor in a background thread.")
+        threading.Thread(target=reactor.run, args=(False,), daemon=True).start()
+        reactor.callWhenRunning(start_minecraft_bot)
+        log.info("Minecraft bot has been scheduled to start.")
 
-if not reactor.running:
-    threading.Thread(target=reactor.run, args=(False,), daemon=True).start()
-    log.info("Twisted reactor started in a background thread.")
-
-reactor.callWhenRunning(start_minecraft_bot)
+# When the application module is loaded by Gunicorn, initialize the bot.
+initialize_bot()
 
 if __name__ == "__main__":
-    log.info("Starting Flask development server for local testing.")
+    # This block is for local development and debugging.
+    log.info("Starting Flask development server.")
     app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 8080)))
