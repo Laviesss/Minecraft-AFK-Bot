@@ -1,10 +1,10 @@
-# Minecraft AFK Bot for Render
+# Node.js Minecraft AFK Bot for Render
 
-This project provides a simple, 24/7 Minecraft AFK bot designed for deployment on [Render's](https://render.com/) free tier.
+This project provides a simple and reliable 24/7 Minecraft AFK bot, rewritten in Node.js for enhanced stability. It is designed for easy deployment on [Render's](https://render.com/) free tier.
 
-The bot runs in a background thread within a single web service. A lightweight Flask server provides a public URL, which is used by an external keep-alive service to prevent Render's free instance from spinning down due to inactivity.
-
-The application is configured to run with a single [Gunicorn](https://gunicorn.org/) worker process. This is a critical setting that ensures only one instance of the bot is ever running, even in a production environment.
+The application consists of two main components running in a single process:
+1.  **A Mineflayer Bot:** A powerful and popular Node.js library for creating Minecraft bots. It handles all the complexities of the Minecraft protocol and includes a robust, event-driven system for managing connections.
+2.  **An Express Web Server:** A lightweight web server that provides a public URL. This is used by an external keep-alive service to prevent Render's free web service from spinning down due to inactivity.
 
 ## Configuration (Environment Variables)
 
@@ -21,11 +21,11 @@ The bot is configured using environment variables on Render. You will need to se
 2.  **Create a New Web Service in Render:**
     *   From your dashboard, click **"New +"** -> **"Web Service"**.
     *   Connect your GitHub account and select your forked repository.
-    *   **Name:** Give it a unique name (e.g., `my-afk-bot`).
+    *   **Name:** Give it a unique name (e.g., `my-node-afk-bot`).
     *   **Region:** Choose a region close to your Minecraft server.
-    *   **Runtime:** `Python 3`.
-    *   **Build Command:** `pip install -r requirements.txt`.
-    *   **Start Command:** `gunicorn --workers 1 --access-logfile /dev/null --error-logfile - app:app` (Render should detect this from the `Procfile`).
+    *   **Runtime:** `Node`. (Render will automatically detect this from the `package.json` file).
+    *   **Build Command:** `npm install` (This is the standard command for Node.js projects).
+    *   **Start Command:** `node index.js` (Render should detect this from the `Procfile`).
     *   **Instance Type:** `Free`.
 
 3.  **Add Environment Variables:**
@@ -33,9 +33,9 @@ The bot is configured using environment variables on Render. You will need to se
     *   Click **"Add Environment Variable"** and add your Minecraft server details (`MC_SERVER_ADDRESS`, `MC_USERNAME`, etc.).
 
 4.  **Deploy:**
-    *   Click **"Create Web Service"**. Render will build and deploy your bot.
+    *   Click **"Create Web Service"**. Render will install your dependencies, build the project, and deploy the bot.
     *   Once the deployment is live, check the logs to see the bot's status.
-    *   Copy your service's URL (e.g., `https://my-afk-bot.onrender.com`). You will need this for the next step.
+    *   Copy your service's URL (e.g., `https://my-node-afk-bot.onrender.com`). You will need this for the next step.
 
 ## Setting Up a Keep-Alive Service (Required for Free Tier)
 
