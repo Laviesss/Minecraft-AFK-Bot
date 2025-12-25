@@ -26,6 +26,7 @@ app.listen(listenerPort, () => {
 
 // --- Mineflayer Bot Logic ---
 let bot;
+let antiAfkInterval; // To hold the anti-AFK timer
 
 function createBot() {
   let versionLog = version ? `on version ${version}` : `(auto-detecting version)`;
@@ -52,6 +53,16 @@ function createBot() {
 
   bot.on('spawn', () => {
     console.log('Bot has successfully joined the server and is now AFK.');
+
+    // Start anti-AFK mechanism: jump every 45 seconds to simulate activity.
+    // Clear any existing interval to prevent duplicates.
+    if (antiAfkInterval) clearInterval(antiAfkInterval);
+
+    antiAfkInterval = setInterval(() => {
+      // Use a quick jump as a silent, non-spammy way to stay active.
+      bot.setControlState('jump', true);
+      bot.setControlState('jump', false);
+    }, 45000);
   });
 
   bot.on('kicked', (reason, loggedIn) => {
@@ -65,6 +76,12 @@ function createBot() {
   // The 'end' event is the primary signal for reconnection.
   bot.on('end', (reason) => {
     console.log(`Bot disconnected. Reason: ${reason}`);
+
+    // Stop the anti-AFK mechanism when the bot disconnects.
+    if (antiAfkInterval) {
+      clearInterval(antiAfkInterval);
+    }
+
     console.log('Attempting to reconnect in 1 second...');
     // A simple and reliable fixed-delay reconnect.
     setTimeout(createBot, 1000);
