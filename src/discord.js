@@ -130,12 +130,14 @@ async function initDiscord(state, config) {
                     embed.setTitle('🏃‍♂️ Move').setDescription('Use the buttons to move the bot.');
                     return interaction.editReply({ embeds: [embed], components: [row] });
                 case 'forward':
+                case 'backward': // Legacy support
                 case 'back':
                 case 'left':
                 case 'right':
-                    mineflayerBotRef.setControlState(action, true);
-                    setTimeout(() => mineflayerBotRef.setControlState(action, false), 500);
-                    embed.setDescription(`Moving ${action}...`);
+                    const moveDirection = action === 'backward' ? 'back' : action;
+                    mineflayerBotRef.setControlState(moveDirection, true);
+                    setTimeout(() => mineflayerBotRef.setControlState(moveDirection, false), 500);
+                    embed.setDescription(`Moving ${moveDirection}...`);
                     break;
                 case 'stop':
                     mineflayerBotRef.clearControlStates();

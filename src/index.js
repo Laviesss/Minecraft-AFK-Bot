@@ -57,12 +57,17 @@ app.use(express.static(path.join(__dirname, '../public')));
 io.on('connection', (socket) => {
   socket.emit('state', botState);
 
+  console.log(`[Socket] New connection: ${socket.id}`);
+  socket.emit('state', botState);
+
   socket.on('chat-message', (msg) => {
+    console.log(`[Socket] Received chat-message: "${msg}"`);
     if (bot && botState.isOnline && msg) bot.chat(msg);
   });
 
   socket.on('toggle-afk', () => {
     botState.isAfkEnabled = !botState.isAfkEnabled;
+    console.log(`[Socket] Toggled Anti-AFK to ${botState.isAfkEnabled ? 'ON' : 'OFF'}`);
     io.emit('chat', `[SYSTEM] Anti-AFK is now ${botState.isAfkEnabled ? 'ON' : 'OFF'}.`);
   });
 
@@ -155,7 +160,7 @@ function createBot() {
   updateBotInstance(bot);
 
   bot.on('login', () => {
-    console.log(`Logged in as '${bot.username}'.`);
+    console.log(`[Bot] Logged in as '${bot.username}' to ${bot.socket.remoteAddress}`);
     botState.isOnline = true;
     botState.uptime = 0;
     mcData = mc(bot.version);
@@ -166,7 +171,7 @@ function createBot() {
   });
 
   bot.on('spawn', () => {
-    console.log('Bot spawned.');
+    console.log('[Bot] Spawned into the world.');
     botState.health = bot.health;
     botState.hunger = bot.food;
     botState.coordinates = bot.entity.position;
@@ -267,9 +272,9 @@ function createBot() {
       const embed = new EmbedBuilder().setColor(0xFF5555).setTitle('‼️ Bot Kicked').setDescription(`**Reason:** \`\`\`${reasonText}\`\`\``);
       sendMessageToChannel(embed);
   });
-  bot.on('error', (err) => console.error('Bot error:', err));
+  bot.on('error', (err) => console.error('[Bot] Error:', err));
   bot.on('end', (reason) => {
-    console.log(`Disconnected. Reason: ${reason}. Reconnecting...`);
+    console.log(`[Bot] Disconnected. Reason: ${reason}. Reconnecting in 10 seconds...`);
     botState.isOnline = false;
     botState.lastDisconnectReason = reason;
     if (antiAfkInterval) clearInterval(antiAfkInterval);

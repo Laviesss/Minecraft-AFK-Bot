@@ -69,4 +69,40 @@ function findHighestBlock(bot, x, z) {
   return null;
 }
 
-module.exports = { getWebMinimap };
+/**
+ * Generates a textual minimap for Discord embeds.
+ * @param {import('mineflayer').Bot} bot - The mineflayer bot instance.
+ * @returns {string} A string representation of the map.
+ */
+function getDiscordMinimap(bot) {
+    const radius = 2;
+    let map = '';
+    const botPos = bot.entity.position;
+
+    for (let dz = -radius; dz <= radius; dz++) {
+        for (let dx = -radius; dx <= radius; dx++) {
+            if (dx === 0 && dz === 0) {
+                map += '🤖';
+                continue;
+            }
+
+            const blockPos = botPos.offset(dx, -1, dz);
+            const block = bot.blockAt(blockPos);
+
+            if (block) {
+                if (block.name.includes('water')) map += '🟦';
+                else if (block.name.includes('lava')) map += '🟧';
+                else if (block.name.includes('grass')) map += '🟩';
+                else if (block.name.includes('sand')) map += '🟨';
+                else if (block.name.includes('stone') || block.name.includes('ore')) map += '⬛';
+                else map += '⬜️';
+            } else {
+                map += '❓';
+            }
+        }
+        map += '\n';
+    }
+    return map;
+}
+
+module.exports = { getWebMinimap, getDiscordMinimap };
