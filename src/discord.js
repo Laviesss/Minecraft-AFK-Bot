@@ -46,7 +46,7 @@ async function initDiscord(state, config) {
 
         if ((!mineflayerBotRef || !botStateRef.isOnline) && commandName !== 'validateproxies') {
             const embed = new EmbedBuilder()
-                .setColor(0x_FF5555) // Red
+                .setColor(0xFF5555) // Red
                 .setTitle('❌ Bot Offline')
                 .setDescription('The Minecraft bot is currently offline. Please wait for it to reconnect.');
             return interaction.editReply({ embeds: [embed] });
@@ -58,11 +58,11 @@ async function initDiscord(state, config) {
             // --- ADMIN COMMANDS ---
             if (commandName === 'validateproxies') {
                 if (!isAdmin) {
-                    const embed = new EmbedBuilder().setColor(0x_FF5555).setTitle('⛔ Access Denied').setDescription('You do not have permission to use this command.');
+                    const embed = new EmbedBuilder().setColor(0xFF5555).setTitle('⛔ Access Denied').setDescription('You do not have permission to use this command.');
                     return interaction.editReply({ embeds: [embed] });
                 }
 
-                await interaction.editReply({ embeds: [new EmbedBuilder().setColor(0x_5555FF).setTitle('🔄 Validating Proxies...').setDescription('Please wait, this may take a moment.')] });
+                await interaction.editReply({ embeds: [new EmbedBuilder().setColor(0x5555FF).setTitle('🔄 Validating Proxies...').setDescription('Please wait, this may take a moment.')] });
 
                 const allProxies = await proxyManager.loadProxies();
                 const validProxies = await proxyManager.validateProxies(allProxies);
@@ -70,14 +70,14 @@ async function initDiscord(state, config) {
                 proxyManager.setValidProxies(validProxies);
 
                 const embed = new EmbedBuilder()
-                    .setColor(0x_55FF55) // Green
+                    .setColor(0x55FF55) // Green
                     .setTitle('✅ Validation Complete')
                     .setDescription(`Finished validating proxies.\n**${validProxies.length} / ${allProxies.length}** are working.`);
                 return interaction.editReply({ embeds: [embed] });
             }
 
             // --- USER COMMANDS ---
-            const embed = new EmbedBuilder().setColor(0x_0099FF).setTimestamp();
+            const embed = new EmbedBuilder().setColor(0x0099FF).setTimestamp();
 
             switch (commandName) {
                 case 'status':
@@ -107,13 +107,13 @@ async function initDiscord(state, config) {
                 case 'say':
                     const message = interaction.options.getString('message');
                     mineflayerBotRef.chat(message);
-                    embed.setColor(0x_AAAAAA).setTitle('💬 Message Sent').setDescription(`Successfully sent message: \`${message}\``);
+                    embed.setColor(0xAAAAAA).setTitle('💬 Message Sent').setDescription(`Successfully sent message: \`${message}\``);
                     break;
             }
             await interaction.editReply({ embeds: [embed] });
         } catch (error) {
             console.error('Error handling interaction:', error);
-            const errorEmbed = new EmbedBuilder().setColor(0x_FF5555).setTitle('❌ An Error Occurred').setDescription('Something went wrong while processing your command.');
+            const errorEmbed = new EmbedBuilder().setColor(0xFF5555).setTitle('❌ An Error Occurred').setDescription('Something went wrong while processing your command.');
             if (interaction.deferred || interaction.replied) {
                 await interaction.editReply({ embeds: [errorEmbed], ephemeral: true });
             } else {

@@ -125,7 +125,7 @@ function createBot() {
     botState.uptime = 0;
     if (uptimeInterval) clearInterval(uptimeInterval);
     uptimeInterval = setInterval(() => botState.uptime++, 1000);
-    const embed = new EmbedBuilder().setColor(0x_55FF55).setTitle('✅ Bot Connected').setDescription(`Successfully connected to \`${bot.options.host}\` as \`${bot.username}\`.`);
+    const embed = new EmbedBuilder().setColor(0x55FF55).setTitle('✅ Bot Connected').setDescription(`Successfully connected to \`${bot.options.host}\` as \`${bot.username}\`.`);
     sendMessageToChannel(embed);
   });
 
@@ -153,17 +153,17 @@ function createBot() {
   };
   bot.on('playerJoined', p => {
     updatePlayers();
-    const embed = new EmbedBuilder().setColor(0x_55FF55).setTitle('➡️ Player Joined').setDescription(`\`${p.username}\` joined the game.`);
+    const embed = new EmbedBuilder().setColor(0x55FF55).setTitle('➡️ Player Joined').setDescription(`\`${p.username}\` joined the game.`);
     sendMessageToChannel(embed);
   });
   bot.on('playerLeft', p => {
     updatePlayers();
-    const embed = new EmbedBuilder().setColor(0x_FF5555).setTitle('⬅️ Player Left').setDescription(`\`${p.username}\` left the game.`);
+    const embed = new EmbedBuilder().setColor(0xFF5555).setTitle('⬅️ Player Left').setDescription(`\`${p.username}\` left the game.`);
     sendMessageToChannel(embed);
   });
 
   bot.on('chat', (username, message) => {
-    const chatEmbed = new EmbedBuilder().setColor(0x_AAAAAA).setDescription(`**${username}:** ${message}`);
+    const chatEmbed = new EmbedBuilder().setColor(0xAAAAAA).setDescription(`**${username}:** ${message}`);
     sendMessageToChannel(chatEmbed);
     io.emit('chat', `<${username}> ${message}`);
     if (username === bot.username || !message.startsWith('!')) return;
