@@ -100,7 +100,7 @@ def start_minecraft_bot():
     factory = AFKBotFactory()
     factory.profile.display_name = username
 
-    reactor.connectTCP(server_address, server_port, factory)
+    reactor.connectTCP(server_address, server_port, factory, timeout=15)
 
 # --- Bot Initialization and Main Execution ---
 def initialize_bot():
