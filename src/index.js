@@ -4,7 +4,7 @@ const express = require('express');
 const http = require('http');
 const { Server } = require("socket.io");
 const path = require('path');
-const { initDiscord, sendMessageToChannel } = require('./discord');
+const { initDiscord, sendMessageToChannel, updateBotInstance } = require('./discord');
 
 // --- Global State ---
 const botState = {
@@ -23,14 +23,10 @@ const botState = {
   weather: 'clear',
   playerCount: 0,
   playerList: [],
-  lastChatMessage: '',
-  lastSystemMessage: '',
-  errorCount: 0,
-  lastError: 'N/A',
   isAfkEnabled: true,
 };
 
-// --- Environment Variable Validation & Config ---
+// --- Config ---
 const config = {
   host: process.env.MC_SERVER_ADDRESS,
   port: parseInt(process.env.MC_SERVER_PORT || 25565, 10),
@@ -57,22 +53,17 @@ const io = new Server(server);
 const listenerPort = process.env.PORT || 8080;
 
 app.use(express.static(path.join(__dirname, '../public')));
-
 io.on('connection', (socket) => {
-  console.log('Dashboard user connected.');
   socket.emit('state', botState);
   socket.on('chat-message', (msg) => {
     if (bot && botState.isOnline && msg) bot.chat(msg);
   });
-  socket.on('disconnect', () => console.log('Dashboard user disconnected.'));
 });
-
 server.listen(listenerPort, () => {
   console.log(`Web server listening on port ${listenerPort}`);
   botState.serverAddress = `${config.host}:${config.port}`;
   botState.version = config.version || 'Auto-detected';
 });
-
 setInterval(() => io.emit('state', botState), 1000);
 
 // --- Mineflayer Bot Logic ---
@@ -81,18 +72,18 @@ let antiAfkInterval;
 let uptimeInterval;
 
 function createBot() {
-  console.log(`Attempting to connect to ${config.host}:${config.port} as ${config.username} (auth: ${config.authMethod})`);
-
+  console.log(`Connecting to ${config.host}:${config.port} as ${config.username}...`);
   bot = mineflayer.createBot({
     host: config.host,
     port: config.port,
     username: config.authMethod === 'microsoft' ? config.microsoftEmail : config.username,
     auth: config.authMethod,
     version: config.version || false,
-    checkTimeoutInterval: 15 * 1000,
+    checkTimeoutInterval: 30 * 1000, // 30 seconds
   });
 
-  initDiscord(botState, bot);
+  // Update the Discord module with the new bot instance
+  updateBotInstance(bot);
 
   const startAntiAfk = () => {
     if (antiAfkInterval) clearInterval(antiAfkInterval);
@@ -105,7 +96,7 @@ function createBot() {
   };
 
   bot.on('login', () => {
-    console.log(`Login successful as '${bot.username}'.`);
+    console.log(`Logged in as '${bot.username}'.`);
     botState.isOnline = true;
     botState.uptime = 0;
     if (uptimeInterval) clearInterval(uptimeInterval);
@@ -114,7 +105,7 @@ function createBot() {
   });
 
   bot.on('spawn', () => {
-    console.log('Bot has joined the server.');
+    console.log('Bot spawned.');
     botState.health = bot.health;
     botState.hunger = bot.food;
     botState.coordinates = bot.entity.position;
@@ -132,67 +123,52 @@ function createBot() {
     botState.playerCount = Object.keys(bot.players).length;
     botState.playerList = Object.keys(bot.players);
   };
-  bot.on('playerJoined', (player) => {
-    updatePlayers();
-    const joinMessage = `➡️ ${player.username} joined.`;
-    io.emit('chat', joinMessage);
-    sendMessageToChannel(joinMessage);
-  });
-  bot.on('playerLeft', (player) => {
-    updatePlayers();
-    const leftMessage = `⬅️ ${player.username} left.`;
-    io.emit('chat', leftMessage);
-    sendMessageToChannel(leftMessage);
-  });
+  bot.on('playerJoined', p => { updatePlayers(); sendMessageToChannel(`➡️ ${p.username} joined.`); });
+  bot.on('playerLeft', p => { updatePlayers(); sendMessageToChannel(`⬅️ ${p.username} left.`); });
 
   bot.on('chat', (username, message) => {
-    const chatMessage = `<${username}> ${message}`;
-    io.emit('chat', chatMessage);
-    sendMessageToChannel(chatMessage.replace(/@/g, '@ '));
-    if (username === bot.username) return;
-    if (message.startsWith('!')) handleCommand(username, message);
+    const chatMsg = `<${username}> ${message}`;
+    io.emit('chat', chatMsg);
+    sendMessageToChannel(chatMsg.replace(/@/g, '@ '));
+    if (username === bot.username || !message.startsWith('!')) return;
+    handleCommand(username, message);
   });
 
-  let lastCommandTime = 0;
+  let lastCmdTime = 0;
   function handleCommand(username, message) {
-    const now = Date.now();
-    if (now - lastCommandTime < 3000) return;
-    lastCommandTime = now;
-
-    const [command, ...args] = message.substring(1).split(' ');
+    if (Date.now() - lastCmdTime < 3000) return;
+    lastCmdTime = Date.now();
+    const [command] = message.substring(1).split(' ');
     const isAdmin = config.admins.includes(username);
-
     switch (command.toLowerCase()) {
       case 'status': bot.chat(`Online | Uptime: ${botState.uptime}s`); break;
-      case 'health': bot.chat(`HP: ${Math.round(botState.health)}/20 | Hunger: ${Math.round(botState.hunger)}/20`); break;
-      case 'coords': const { x, y, z } = botState.coordinates; bot.chat(`Coords: X:${Math.round(x)} Y:${Math.round(y)} Z:${Math.round(z)}`); break;
+      case 'health': bot.chat(`HP: ${Math.round(botState.health)}/20`); break;
+      case 'coords': const { x, y, z } = botState.coordinates; bot.chat(`X:${Math.round(x)} Y:${Math.round(y)} Z:${Math.round(z)}`); break;
       case 'players': bot.chat(`Players (${botState.playerCount}): ${botState.playerList.join(', ')}`); break;
       case 'ping': bot.chat(`Your ping: ${bot.players[username]?.ping ?? 'N/A'}ms.`); break;
       case 'uptime': bot.chat(`Uptime: ${botState.uptime}s.`); break;
       case 'help': bot.chat('Commands: !status, !health, !coords, !players, !ping, !uptime, !afk'); break;
       case 'afk':
-        if (!isAdmin) return bot.chat("You don't have permission to use this command.");
+        if (!isAdmin) return bot.chat("You don't have permission.");
         botState.isAfkEnabled = !botState.isAfkEnabled;
         bot.chat(`Anti-AFK is now ${botState.isAfkEnabled ? 'ON' : 'OFF'}.`);
         break;
     }
   }
 
-  bot.on('kicked', (reason) => {
-    const kickMessage = `‼️ Kicked. Reason: ${reason}`;
-    console.warn(kickMessage);
-    sendMessageToChannel(kickMessage);
-  });
-  bot.on('error', (err) => console.error('An error occurred:', err.message));
+  bot.on('kicked', (reason) => sendMessageToChannel(`‼️ Kicked. Reason: ${reason}`));
+  bot.on('error', (err) => console.error('Bot error:', err));
   bot.on('end', (reason) => {
-    const endMessage = `❌ Disconnected. Reason: ${reason}. Reconnecting...`;
-    console.log(endMessage);
+    console.log(`Disconnected. Reason: ${reason}. Reconnecting...`);
     botState.isOnline = false;
     if (antiAfkInterval) clearInterval(antiAfkInterval);
     if (uptimeInterval) clearInterval(uptimeInterval);
-    sendMessageToChannel(endMessage);
-    setTimeout(createBot, 5000);
+    sendMessageToChannel(`❌ Disconnected. Reason: ${reason}.`);
+    setTimeout(createBot, 10000); // 10 seconds
   });
 }
 
+// --- Initial Setup ---
+// Start the Discord bot ONCE, and then start the Minecraft bot logic.
+initDiscord(botState);
 createBot();
