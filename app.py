@@ -1,6 +1,5 @@
 import os
 import sys
-import socket
 import logging
 import threading
 from flask import Flask
@@ -59,28 +58,6 @@ class AFKBotFactory(ClientFactory):
         log.info(f"Reconnecting in {self.reconnect_delay} second(s)...")
         reactor.callLater(self.reconnect_delay, connector.connect)
 
-def check_server_connectivity(host, port, timeout=15):
-    """
-    Performs a simple TCP connection test to a given host and port.
-    Returns True if the connection is successful, False otherwise.
-    """
-    log.info(f"Performing pre-flight network check to {host}:{port}...")
-    try:
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            s.settimeout(timeout)
-            s.connect((host, port))
-            log.info("Network check successful. Port is open.")
-            return True
-    except socket.timeout:
-        log.error(f"Network check failed: Connection timed out after {timeout} seconds. This could be due to a firewall on the server's end or the server being offline.")
-        return False
-    except (socket.error, ConnectionRefusedError) as e:
-        log.error(f"Network check failed: {e}. The server is reachable but actively refused the connection.")
-        return False
-    except Exception as e:
-        log.error(f"An unexpected network error occurred: {e}")
-        return False
-
 def start_minecraft_bot():
     """Configures and starts the Minecraft bot connection."""
     server_address = os.environ.get("MC_SERVER_ADDRESS")
@@ -91,11 +68,7 @@ def start_minecraft_bot():
         log.error("Missing required environment variables (MC_SERVER_ADDRESS, MC_USERNAME). The bot will not start.")
         return
 
-    # Perform a pre-flight check for diagnostic logging. The bot's own retry logic
-    # will handle the actual connection attempts.
-    check_server_connectivity(server_address, server_port)
-
-    log.info(f"Handing off to connection logic. The bot will now attempt to connect to '{server_address}:{server_port}' as '{username}' and will retry if the server is offline.")
+    log.info(f"Attempting to connect to '{server_address}:{server_port}' as '{username}'. The bot will retry every second if the connection fails.")
 
     factory = AFKBotFactory()
     factory.profile.display_name = username
