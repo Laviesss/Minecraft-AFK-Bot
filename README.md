@@ -2,6 +2,13 @@
 
 This project provides a simple and reliable 24/7 Minecraft AFK bot, rewritten in Node.js for enhanced stability. It is designed for easy deployment on [Render's](https://render.com/) free tier.
 
+## Local Setup
+
+Before running the bot on your local machine, you need to configure your environment variables.
+
+1.  **Create a `.env` file:** Make a copy of the `.env.example` file and rename it to `.env`.
+2.  **Fill in the values:** Open the new `.env` file and fill in your server details, Discord bot token, and any other required information.
+
 The application consists of two main components running in a single process:
 1.  **A Mineflayer Bot:** A powerful and popular Node.js library for creating Minecraft bots. It handles all the complexities of the Minecraft protocol and includes a robust, event-driven system for managing connections.
 2.  **An Express Web Server:** A lightweight web server that provides a public URL. This is used by an external keep-alive service to prevent Render's free web service from spinning down due to inactivity.
