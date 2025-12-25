@@ -4,7 +4,8 @@ const express = require('express');
 const http = require('http');
 const { Server } = require("socket.io");
 const path = require('path');
-const { initDiscord, sendMessageToChannel, updateBotInstance } = require('./discord');
+const { initDiscord, sendMessageToChannel, updateBotInstance, EmbedBuilder } = require('./discord');
+const proxyManager = require('./proxyManager');
 
 // --- Global State ---
 const botState = {
@@ -17,12 +18,6 @@ const botState = {
   health: 20,
   hunger: 20,
   coordinates: { x: 0, y: 0, z: 0 },
-  dimension: 'minecraft:overworld',
-  heldItem: 'Empty Hand',
-  time: 'day',
-  weather: 'clear',
-  playerCount: 0,
-  playerList: [],
   isAfkEnabled: true,
 };
 
@@ -72,28 +67,21 @@ let antiAfkInterval;
 let uptimeInterval;
 
 function createBot() {
+  const proxyAgent = proxyManager.getNextProxy();
   console.log(`Connecting to ${config.host}:${config.port} as ${config.username}...`);
-  bot = mineflayer.createBot({
+
+  const botOptions = {
     host: config.host,
     port: config.port,
     username: config.authMethod === 'microsoft' ? config.microsoftEmail : config.username,
     auth: config.authMethod,
     version: config.version || false,
-    checkTimeoutInterval: 30 * 1000, // 30 seconds
-  });
-
-  // Update the Discord module with the new bot instance
-  updateBotInstance(bot);
-
-  const startAntiAfk = () => {
-    if (antiAfkInterval) clearInterval(antiAfkInterval);
-    antiAfkInterval = setInterval(() => {
-      if (botState.isAfkEnabled) {
-        bot.setControlState('jump', true);
-        bot.setControlState('jump', false);
-      }
-    }, 45000);
+    checkTimeoutInterval: 30 * 1000,
   };
+  if (proxyAgent) botOptions.agent = proxyAgent;
+
+  bot = mineflayer.createBot(botOptions);
+  updateBotInstance(bot);
 
   bot.on('login', () => {
     console.log(`Logged in as '${bot.username}'.`);
@@ -101,7 +89,8 @@ function createBot() {
     botState.uptime = 0;
     if (uptimeInterval) clearInterval(uptimeInterval);
     uptimeInterval = setInterval(() => botState.uptime++, 1000);
-    sendMessageToChannel(`✅ Bot **${bot.username}** has connected.`);
+    const embed = new EmbedBuilder().setColor(0x_55FF55).setTitle('✅ Bot Connected').setDescription(`Successfully connected to \`${bot.options.host}\` as \`${bot.username}\`.`);
+    sendMessageToChannel(embed);
   });
 
   bot.on('spawn', () => {
@@ -109,27 +98,38 @@ function createBot() {
     botState.health = bot.health;
     botState.hunger = bot.food;
     botState.coordinates = bot.entity.position;
-    startAntiAfk();
+    if (antiAfkInterval) clearInterval(antiAfkInterval);
+    antiAfkInterval = setInterval(() => {
+      if (botState.isAfkEnabled) bot.setControlState('jump', true);
+      bot.setControlState('jump', false);
+    }, 45000);
   });
 
   bot.on('health', () => {
     botState.health = bot.health;
     botState.hunger = bot.food;
   });
-
   bot.on('move', () => botState.coordinates = bot.entity.position.floored());
 
   const updatePlayers = () => {
     botState.playerCount = Object.keys(bot.players).length;
     botState.playerList = Object.keys(bot.players);
   };
-  bot.on('playerJoined', p => { updatePlayers(); sendMessageToChannel(`➡️ ${p.username} joined.`); });
-  bot.on('playerLeft', p => { updatePlayers(); sendMessageToChannel(`⬅️ ${p.username} left.`); });
+  bot.on('playerJoined', p => {
+    updatePlayers();
+    const embed = new EmbedBuilder().setColor(0x_55FF55).setTitle('➡️ Player Joined').setDescription(`\`${p.username}\` joined the game.`);
+    sendMessageToChannel(embed);
+  });
+  bot.on('playerLeft', p => {
+    updatePlayers();
+    const embed = new EmbedBuilder().setColor(0x_FF5555).setTitle('⬅️ Player Left').setDescription(`\`${p.username}\` left the game.`);
+    sendMessageToChannel(embed);
+  });
 
   bot.on('chat', (username, message) => {
-    const chatMsg = `<${username}> ${message}`;
-    io.emit('chat', chatMsg);
-    sendMessageToChannel(chatMsg.replace(/@/g, '@ '));
+    const chatEmbed = new EmbedBuilder().setColor(0x_AAAAAA).setDescription(`**${username}:** ${message}`);
+    sendMessageToChannel(chatEmbed);
+    io.emit('chat', `<${username}> ${message}`);
     if (username === bot.username || !message.startsWith('!')) return;
     handleCommand(username, message);
   });
@@ -156,19 +156,42 @@ function createBot() {
     }
   }
 
-  bot.on('kicked', (reason) => sendMessageToChannel(`‼️ Kicked. Reason: ${reason}`));
+  bot.on('kicked', (reason) => {
+      let reasonText = reason;
+      try {
+        // Aternos servers sometimes send a JSON object as the kick reason.
+        const reasonObj = JSON.parse(reason);
+        reasonText = reasonObj.text || reason;
+        if (reasonObj.extra) {
+            reasonText += reasonObj.extra.map(item => item.text).join('');
+        }
+      } catch (e) {
+        // It's not a JSON object, so we'll just use the raw string.
+      }
+      const embed = new EmbedBuilder().setColor(0xFF5555).setTitle('‼️ Bot Kicked').setDescription(`**Reason:** \`\`\`${reasonText}\`\`\``);
+      sendMessageToChannel(embed);
+  });
   bot.on('error', (err) => console.error('Bot error:', err));
   bot.on('end', (reason) => {
     console.log(`Disconnected. Reason: ${reason}. Reconnecting...`);
     botState.isOnline = false;
     if (antiAfkInterval) clearInterval(antiAfkInterval);
     if (uptimeInterval) clearInterval(uptimeInterval);
-    sendMessageToChannel(`❌ Disconnected. Reason: ${reason}.`);
-    setTimeout(createBot, 10000); // 10 seconds
+    const embed = new EmbedBuilder().setColor(0xFF5555).setTitle('❌ Bot Disconnected').setDescription(`**Reason:** ${reason}. Reconnecting in 10s...`);
+    sendMessageToChannel(embed);
+    setTimeout(createBot, 10000);
   });
 }
 
 // --- Initial Setup ---
-// Start the Discord bot ONCE, and then start the Minecraft bot logic.
-initDiscord(botState);
-createBot();
+async function start() {
+  const allProxies = await proxyManager.loadProxies();
+  const validProxies = await proxyManager.validateProxies(allProxies);
+  await proxyManager.writeProxies(validProxies);
+  proxyManager.setValidProxies(validProxies);
+
+  initDiscord(botState, config);
+  createBot();
+}
+
+start();
