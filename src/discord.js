@@ -122,7 +122,7 @@ async function initDiscord(state, config) {
                 case 'move':
                     const row = new ActionRowBuilder().addComponents(
                         new ButtonBuilder().setCustomId('forward').setLabel('⬆️').setStyle(ButtonStyle.Primary),
-                        new ButtonBuilder().setCustomId('backward').setLabel('⬇️').setStyle(ButtonStyle.Primary),
+                        new ButtonBuilder().setCustomId('back').setLabel('⬇️').setStyle(ButtonStyle.Primary),
                         new ButtonBuilder().setCustomId('left').setLabel('⬅️').setStyle(ButtonStyle.Primary),
                         new ButtonBuilder().setCustomId('right').setLabel('➡️').setStyle(ButtonStyle.Primary),
                         new ButtonBuilder().setCustomId('stop').setLabel('🛑').setStyle(ButtonStyle.Danger)
@@ -130,7 +130,7 @@ async function initDiscord(state, config) {
                     embed.setTitle('🏃‍♂️ Move').setDescription('Use the buttons to move the bot.');
                     return interaction.editReply({ embeds: [embed], components: [row] });
                 case 'forward':
-                case 'backward':
+                case 'back':
                 case 'left':
                 case 'right':
                     mineflayerBotRef.setControlState(action, true);
