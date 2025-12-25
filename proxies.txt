@@ -1,18 +1,10 @@
 # Add your proxies here, one per line.
-# The full protocol MUST be included.
+# The bot will automatically detect if they are HTTP or SOCKS5.
 
-# --- EXAMPLES ---
-# HTTP Proxy:
-# http://host:port
-# http://user:pass@host:port
-
-# SOCKS5 Proxy:
-# socks5://host:port
-# socks5://user:pass@host:port
-
-# SOCKS4 Proxy:
-# socks4://host:port
+# Format:
+# HOST:PORT
+# USER:PASS@HOST:PORT
 
 # Example:
-# http://127.0.0.1:8080
-# socks5://myuser:mypass@192.168.1.1:1080
+# 127.0.0.1:8080
+# myuser:mypass@192.168.1.1:1080
