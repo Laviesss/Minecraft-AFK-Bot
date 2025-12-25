@@ -1,5 +1,5 @@
 # Add your proxies here, one per line.
-# The bot will automatically detect if they are HTTP or SOCKS5.
+# The bot will automatically detect if they are HTTP, SOCKS5, or SOCKS4.
 
 # Format:
 # HOST:PORT

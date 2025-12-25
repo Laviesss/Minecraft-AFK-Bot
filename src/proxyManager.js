@@ -4,10 +4,6 @@ const { Agent } = require('proxy-agent');
 let validProxies = [];
 let currentProxyIndex = 0;
 
-/**
- * Reads proxies from proxies.txt.
- * @returns {Promise<string[]>} An array of proxy strings in HOST:PORT format.
- */
 async function loadProxies() {
     try {
         const data = await fs.readFile('proxies.txt', 'utf8');
@@ -22,12 +18,8 @@ async function loadProxies() {
     }
 }
 
-/**
- * Writes an array of full proxy URLs back to proxies.txt for user reference.
- * @param {string[]} proxies - The array of validated proxy URL strings.
- */
 async function writeProxies(proxies) {
-    const fileContent = `# Add your proxies here in HOST:PORT or USER:PASS@HOST:PORT format.\n# The bot will automatically detect the protocol.\n# Below is the list of currently valid proxies:\n${proxies.join('\n')}`;
+    const fileContent = `# Add your proxies here in HOST:PORT or USER:PASS@HOST:PORT format.\n# The bot will automatically detect the protocol (SOCKS5, SOCKS4, HTTP).\n# Below is the list of currently valid proxies:\n${proxies.join('\n')}`;
     try {
         await fs.writeFile('proxies.txt', fileContent);
     } catch (error) {
@@ -35,18 +27,12 @@ async function writeProxies(proxies) {
     }
 }
 
-/**
- * Tries to validate a proxy against a given protocol.
- * @param {string} proxy - The proxy in USER:PASS@HOST:PORT format.
- * @param {string} protocol - The protocol to test ('socks5' or 'http').
- * @returns {Promise<string|null>} The full proxy URL if valid, otherwise null.
- */
 async function tryValidate(proxy, protocol) {
     const proxyUrl = `${protocol}://${proxy}`;
     try {
         const agent = new Agent({ getProxyForUrl: () => proxyUrl });
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000);
+        const timeoutId = setTimeout(() => controller.abort(), 20000); // 20-second timeout
 
         const response = await fetch('https://1.1.1.1/cdn-cgi/trace', {
             agent,
@@ -60,23 +46,20 @@ async function tryValidate(proxy, protocol) {
         console.log(`✅ Proxy ${proxy} is a valid ${protocol.toUpperCase()} proxy.`);
         return proxyUrl;
     } catch (error) {
-        return null; // This protocol failed
+        return null;
     }
 }
 
-/**
- * Validates proxies by automatically detecting their protocol (SOCKS5 or HTTP).
- * @param {string[]} proxies - An array of proxy strings.
- * @returns {Promise<string[]>} A promise that resolves to an array of valid, full proxy URLs.
- */
 async function validateProxies(proxies) {
-    console.log(`Validating ${proxies.length} proxies with auto-detection...`);
+    console.log(`Validating ${proxies.length} proxies with extended auto-detection...`);
     const validationPromises = proxies.map(async (proxy) => {
-        // Test SOCKS5 first as it's the primary type for Minecraft
-        const socksResult = await tryValidate(proxy, 'socks5');
-        if (socksResult) return socksResult;
+        // Test in order of preference: SOCKS5, SOCKS4, then HTTP
+        const socks5Result = await tryValidate(proxy, 'socks5');
+        if (socks5Result) return socks5Result;
 
-        // If SOCKS5 fails, test HTTP
+        const socks4Result = await tryValidate(proxy, 'socks4');
+        if (socks4Result) return socks4Result;
+
         const httpResult = await tryValidate(proxy, 'http');
         if (httpResult) return httpResult;
 
@@ -96,9 +79,7 @@ function setValidProxies(proxies) {
 }
 
 function getNextProxy() {
-    if (validProxies.length === 0) {
-        return null;
-    }
+    if (validProxies.length === 0) return null;
 
     const proxyUrl = validProxies[currentProxyIndex];
     currentProxyIndex = (currentProxyIndex + 1) % validProxies.length;
@@ -106,7 +87,6 @@ function getNextProxy() {
     console.log(`Using proxy: ${proxyUrl}`);
     const agent = new Agent({ getProxyForUrl: () => proxyUrl });
 
-    // Return the full URL for state tracking, and the agent for mineflayer
     return { agent, proxy: proxyUrl };
 }
 
