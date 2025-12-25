@@ -91,12 +91,11 @@ def start_minecraft_bot():
         log.error("Missing required environment variables (MC_SERVER_ADDRESS, MC_USERNAME). The bot will not start.")
         return
 
-    # Perform the pre-flight check. If it fails, stop here.
-    if not check_server_connectivity(server_address, server_port):
-        log.warning("Pre-flight check failed. The bot will not attempt to connect. Please check the server address and firewall settings.")
-        return
+    # Perform a pre-flight check for diagnostic logging. The bot's own retry logic
+    # will handle the actual connection attempts.
+    check_server_connectivity(server_address, server_port)
 
-    log.info(f"Attempting to connect to '{server_address}:{server_port}' as '{username}' in offline mode.")
+    log.info(f"Handing off to connection logic. The bot will now attempt to connect to '{server_address}:{server_port}' as '{username}' and will retry if the server is offline.")
 
     factory = AFKBotFactory()
     factory.profile.display_name = username

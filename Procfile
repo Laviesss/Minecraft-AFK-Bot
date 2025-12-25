@@ -1,1 +1,1 @@
-web: gunicorn --workers 1 --access-logfile /dev/null --error-logfile - app:app
+web: gunicorn --workers 1 --log-level error --access-logfile /dev/null --error-logfile - app:app
