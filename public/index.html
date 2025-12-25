@@ -3,76 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mineflayer Bot Dashboard</title>
+    <title>Minecraft AFK Bot Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: sans-serif; display: flex; flex-wrap: wrap; gap: 20px; }
-        .panel { border: 1px solid #ccc; padding: 15px; border-radius: 5px; min-width: 300px; }
-        #chat-log { height: 200px; overflow-y: scroll; border: 1px solid #eee; padding: 5px; }
-        .status-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px 15px; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #020617; /* slate-950 */
+            color: #f8fafc; /* slate-50 */
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
     </style>
 </head>
 <body>
-    <div class="panel">
-        <h2>Status Panel</h2>
-        <div class="status-grid">
-            <span>Status:</span> <b id="status">Offline</b>
-            <span>Uptime:</span> <span id="uptime">0s</span>
-            <span>Health:</span> <span id="health">20/20</span>
-            <span>Hunger:</span> <span id="hunger">20/20</span>
-            <span>Coords:</span> <span id="coords">X:0 Y:0 Z:0</span>
-            <span>Players:</span> <span id="player-count">0</span>
-        </div>
-    </div>
-
-    <div class="panel">
-        <h2>Chat</h2>
-        <div id="chat-log"></div>
-        <input id="chat-input" type="text" placeholder="Send a message..." />
-        <button onclick="sendMessage()">Send</button>
-    </div>
-
-    <div class="panel">
-        <h2>Player List</h2>
-        <ul id="player-list"></ul>
-    </div>
-
-    <script src="/socket.io/socket.io.js"></script>
-    <script>
-        const socket = io();
-
-        // Status Updates
-        socket.on('state', (state) => {
-            document.getElementById('status').textContent = state.isOnline ? 'Online' : 'Offline';
-            document.getElementById('uptime').textContent = `${state.uptime}s`;
-            document.getElementById('health').textContent = `${Math.round(state.health)}/20`;
-            document.getElementById('hunger').textContent = `${Math.round(state.hunger)}/20`;
-            const { x, y, z } = state.coordinates;
-            document.getElementById('coords').textContent = `X:${Math.round(x)} Y:${Math.round(y)} Z:${Math.round(z)}`;
-            document.getElementById('player-count').textContent = state.playerCount;
-
-            const playerList = document.getElementById('player-list');
-            playerList.innerHTML = '';
-            state.playerList.forEach(player => {
-                const li = document.createElement('li');
-                li.textContent = player;
-                playerList.appendChild(li);
-            });
-        });
-
-        // Chat Updates
-        socket.on('chat', (message) => {
-            const chatLog = document.getElementById('chat-log');
-            const p = document.createElement('p');
-            p.textContent = message;
-            chatLog.appendChild(p);
-            chatLog.scrollTop = chatLog.scrollHeight;
-        });
-
-        function sendMessage() {
-            const input = document.getElementById('chat-input');
-            socket.emit('chat-message', input.value);
-            input.value = '';
-        }
-    </script>
+    <div id="root"></div>
+    <script src="/bundle.js"></script>
 </body>
 </html>

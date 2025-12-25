@@ -19,6 +19,7 @@ const botState = {
   hunger: 20,
   coordinates: { x: 0, y: 0, z: 0 },
   isAfkEnabled: true,
+  proxy: null,
 };
 
 // --- Config ---
@@ -48,18 +49,52 @@ const io = new Server(server);
 const listenerPort = process.env.PORT || 8080;
 
 app.use(express.static(path.join(__dirname, '../public')));
+
 io.on('connection', (socket) => {
   socket.emit('state', botState);
+
   socket.on('chat-message', (msg) => {
     if (bot && botState.isOnline && msg) bot.chat(msg);
   });
+
+  socket.on('toggle-afk', () => {
+    botState.isAfkEnabled = !botState.isAfkEnabled;
+    io.emit('chat', `[SYSTEM] Anti-AFK is now ${botState.isAfkEnabled ? 'ON' : 'OFF'}.`);
+  });
+
+  socket.on('validate-proxies', async () => {
+    const allProxies = await proxyManager.loadProxies();
+    const validProxies = await proxyManager.validateProxies(allProxies);
+    await proxyManager.writeProxies(validProxies);
+    proxyManager.setValidProxies(validProxies);
+    socket.emit('validation-result', `Validation complete. ${validProxies.length}/${allProxies.length} proxies are working.`);
+  });
+
+  socket.on('reconnect-bot', () => {
+    if (bot) bot.end('Manual reconnect triggered from dashboard.');
+  });
+
+  socket.on('force-respawn', () => {
+    if (bot && botState.isOnline) bot.chat('/kill');
+  });
+
+  socket.on('drop-inventory', () => {
+      if (!bot || !botState.isOnline) return;
+      const items = bot.inventory.items();
+      items.forEach(item => bot.tossStack(item));
+  });
 });
+
 server.listen(listenerPort, () => {
   console.log(`Web server listening on port ${listenerPort}`);
   botState.serverAddress = `${config.host}:${config.port}`;
   botState.version = config.version || 'Auto-detected';
 });
-setInterval(() => io.emit('state', botState), 1000);
+
+setInterval(() => {
+    if(bot && bot.player) botState.ping = bot.player.ping;
+    io.emit('state', botState)
+}, 1000);
 
 // --- Mineflayer Bot Logic ---
 let bot;
@@ -67,7 +102,8 @@ let antiAfkInterval;
 let uptimeInterval;
 
 function createBot() {
-  const proxyAgent = proxyManager.getNextProxy();
+  const proxyDetails = proxyManager.getNextProxy();
+  botState.proxy = proxyDetails ? proxyDetails.proxy : null;
   console.log(`Connecting to ${config.host}:${config.port} as ${config.username}...`);
 
   const botOptions = {
@@ -78,7 +114,7 @@ function createBot() {
     version: config.version || false,
     checkTimeoutInterval: 30 * 1000,
   };
-  if (proxyAgent) botOptions.agent = proxyAgent;
+  if (proxyDetails) botOptions.agent = proxyDetails.agent;
 
   bot = mineflayer.createBot(botOptions);
   updateBotInstance(bot);
@@ -159,15 +195,12 @@ function createBot() {
   bot.on('kicked', (reason) => {
       let reasonText = reason;
       try {
-        // Aternos servers sometimes send a JSON object as the kick reason.
         const reasonObj = JSON.parse(reason);
         reasonText = reasonObj.text || reason;
         if (reasonObj.extra) {
             reasonText += reasonObj.extra.map(item => item.text).join('');
         }
-      } catch (e) {
-        // It's not a JSON object, so we'll just use the raw string.
-      }
+      } catch (e) { /* Not JSON */ }
       const embed = new EmbedBuilder().setColor(0xFF5555).setTitle('‼️ Bot Kicked').setDescription(`**Reason:** \`\`\`${reasonText}\`\`\``);
       sendMessageToChannel(embed);
   });
