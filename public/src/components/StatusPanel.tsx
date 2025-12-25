@@ -1,90 +1,48 @@
 import React from 'react';
 import { BotState } from '../types';
-import ProgressBar from './ProgressBar';
 
 interface StatusPanelProps {
   botState: BotState;
 }
 
-const StatusPanel: React.FC<StatusPanelProps> = ({ botState }) => {
-  const { coordinates, isOnline } = botState;
-
-  const offlineDisplay = <span className="font-mono text-slate-500">N/A</span>;
-
+const ProgressBar: React.FC<{ value: number; max: number; label: string; colorClass: string }> = ({ value, max, label, colorClass }) => {
+  const percentage = (value / max) * 100;
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-xl flex flex-col h-full border-l-4 border-l-cyan-500">
-      <h2 className="text-2xl font-extrabold mb-8 flex items-center gap-3 text-slate-100">
-        Status Panel
-      </h2>
+    <div>
+      <span className="text-sm text-slate-400">{label}: {Math.round(value)}/{max}</span>
+      <div className="w-full bg-slate-700 rounded-full h-2.5">
+        <div className={colorClass + " h-2.5 rounded-full"} style={{ width: `${percentage}%` }}></div>
+      </div>
+    </div>
+  );
+};
 
-      <div className="space-y-6 overflow-y-auto pr-2">
-        {/* Status */}
-        <div className="flex justify-between items-center group">
-          <span className="text-slate-400 font-medium">Status:</span>
-          <span className={`font-black text-lg tracking-tight ${isOnline ? 'text-cyan-400' : 'text-red-500'}`}>
-            {isOnline ? 'Online' : 'Offline'}
-          </span>
-        </div>
+const getHealthColor = (health: number) => {
+    if (health > 12) return 'bg-green-500';
+    if (health > 6) return 'bg-yellow-500';
+    return 'bg-red-500';
+}
 
-        {/* Uptime */}
-        <div className="flex justify-between items-center">
-          <span className="text-slate-400 font-medium">Uptime:</span>
-          {isOnline ? <span className="font-bold text-slate-100 font-mono">{botState.uptime}s</span> : offlineDisplay}
-        </div>
+const getHungerColor = (hunger: number) => {
+    if (hunger > 12) return 'bg-orange-500';
+    if (hunger > 6) return 'bg-yellow-500';
+    return 'bg-red-500';
+}
 
-        {/* Health */}
-        <div className="space-y-2">
-          <div className="flex justify-between items-center">
-            <span className="text-slate-400 font-medium">Health:</span>
-            {isOnline ? <span className="font-bold text-slate-100 font-mono">{botState.health}/20</span> : offlineDisplay}
-          </div>
-          <ProgressBar
-            value={isOnline ? botState.health : 0}
-            max={20}
-            colorMap={{ low: 'bg-red-500', med: 'bg-yellow-500', high: 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.4)]' }}
-          />
-        </div>
 
-        {/* Hunger */}
-        <div className="space-y-2">
-          <div className="flex justify-between items-center">
-            <span className="text-slate-400 font-medium">Hunger:</span>
-            {isOnline ? <span className="font-bold text-slate-100 font-mono">{botState.hunger}/20</span> : offlineDisplay}
-          </div>
-          <ProgressBar
-            value={isOnline ? botState.hunger : 0}
-            max={20}
-            colorMap={{ low: 'bg-red-500', med: 'bg-yellow-500', high: 'bg-orange-500 shadow-[0_0_10px_rgba(249,115,22,0.4)]' }}
-          />
-        </div>
-
-        {/* Coords */}
-        <div className="flex justify-between items-center">
-          <span className="text-slate-400 font-medium">Coords:</span>
-          {isOnline ? (
-            <span className="font-bold text-slate-100 font-mono text-sm tracking-tight bg-slate-800 px-2 py-1 rounded">
-              X:{coordinates.x.toFixed(0)} Y:{coordinates.y.toFixed(0)} Z:{coordinates.z.toFixed(0)}
-            </span>
-          ) : offlineDisplay}
-        </div>
-
-        {/* Players */}
-        <div className="flex justify-between items-center">
-          <span className="text-slate-400 font-medium">Players:</span>
-          {isOnline ? (
-            <div className="flex items-center gap-2">
-              <span className="font-black text-cyan-400 text-lg">{botState.playerCount}</span>
-            </div>
-          ) : offlineDisplay}
-        </div>
-
-        {/* Proxy Info */}
-        {botState.proxy && (
-          <div className="mt-4 pt-4 border-t border-slate-800/50 flex justify-between items-center opacity-50 text-[10px] uppercase tracking-widest font-bold">
-            <span className="text-slate-500">Network Proxy</span>
-            <span className="text-cyan-600">{botState.proxy}</span>
-          </div>
-        )}
+const StatusPanel: React.FC<StatusPanelProps> = ({ botState }) => {
+  return (
+    <div className="bg-slate-900 p-4 rounded-lg shadow-lg">
+      <h2 className="text-xl font-bold text-cyan-400 mb-4 border-b border-slate-700 pb-2">Bot Status</h2>
+      <div className="space-y-3">
+        <p><span className="font-semibold text-slate-400">Status:</span> {botState.isOnline ? <span className="text-green-500">🟢 Online</span> : <span className="text-red-500">🔴 Offline</span>}</p>
+        <p><span className="font-semibold text-slate-400">Server:</span> <span className="text-cyan-400">{botState.serverAddress}</span></p>
+        <p><span className="font-semibold text-slate-400">Dashboard:</span> <a href={botState.dashboardUrl} className="text-cyan-400 hover:underline" target="_blank" rel="noopener noreferrer">{botState.dashboardUrl}</a></p>
+        <p><span className="font-semibold text-slate-400">Uptime:</span> {botState.uptime}s</p>
+        <ProgressBar value={botState.health} max={20} label="Health" colorClass={getHealthColor(botState.health)} />
+        <ProgressBar value={botState.hunger} max={20} label="Hunger" colorClass={getHungerColor(botState.hunger)} />
+        <p><span className="font-semibold text-slate-400">Coordinates:</span> X: {Math.round(botState.coordinates.x)}, Y: {Math.round(botState.coordinates.y)}, Z: {Math.round(botState.coordinates.z)}</p>
+        <p><span className="font-semibold text-slate-400">Proxy:</span> {botState.proxy || 'None'}</p>
       </div>
     </div>
   );

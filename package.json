@@ -5,8 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "build:frontend": "esbuild public/src/index.tsx --bundle --outfile=public/bundle.js --jsx=automatic",
-    "postinstall": "npm run build:frontend"
+    "build": "esbuild public/src/index.tsx --bundle --outfile=public/bundle.js --loader:.tsx=tsx --resolve-extensions=.ts,.tsx,.js,.jsx --jsx-factory=React.createElement --jsx-fragment=React.Fragment"
   },
   "dependencies": {
     "discord.js": "^14.25.1",

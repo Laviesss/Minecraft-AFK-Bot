@@ -94,8 +94,9 @@ io.on('connection', (socket) => {
 
   socket.on('move', (direction) => {
     if (bot && botState.isOnline) {
-      bot.setControlState(direction, true);
-      setTimeout(() => bot.setControlState(direction, false), 200);
+      const correctedDirection = direction === 'backward' ? 'back' : direction;
+      bot.setControlState(correctedDirection, true);
+      setTimeout(() => bot.setControlState(correctedDirection, false), 200);
     }
   });
 
@@ -184,7 +185,7 @@ function createBot() {
 
   const updatePlayers = () => {
     botState.playerCount = Object.keys(bot.players).length;
-    botState.playerList = Object.keys(bot.players);
+    botState.playerList = Object.values(bot.players).map(p => ({ username: p.username, ping: p.ping }));
   };
   bot.on('playerJoined', p => {
     updatePlayers();
@@ -270,10 +271,18 @@ function createBot() {
   bot.on('end', (reason) => {
     console.log(`Disconnected. Reason: ${reason}. Reconnecting...`);
     botState.isOnline = false;
+    botState.lastDisconnectReason = reason;
     if (antiAfkInterval) clearInterval(antiAfkInterval);
     if (uptimeInterval) clearInterval(uptimeInterval);
-    const embed = new EmbedBuilder().setColor(0xFF5555).setTitle('❌ Bot Disconnected').setDescription(`**Reason:** ${reason}. Reconnecting in 10s...`);
+
+    const embed = new EmbedBuilder()
+        .setColor(0xFF5555)
+        .setTitle('❌ Bot Disconnected')
+        .setDescription(`**Reason:** ${reason}. Reconnecting in 10s...`);
     sendMessageToChannel(embed);
+
+    // Cleanup listeners before creating a new bot instance
+    bot.removeAllListeners();
     setTimeout(createBot, 10000);
   });
 }
