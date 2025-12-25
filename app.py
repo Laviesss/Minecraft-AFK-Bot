@@ -44,7 +44,7 @@ class AFKBotProtocol(ClientProtocol):
 class AFKBotFactory(ClientFactory):
     """Manages the bot's protocol and implements a reconnection strategy."""
     protocol = AFKBotProtocol
-    reconnect_delay = 5  # Start with a 5-second reconnect delay.
+    reconnect_delay = 1  # Reconnect every 1 second.
 
     def clientConnectionFailed(self, connector, reason):
         log.error("Connection failed: %s", reason.getErrorMessage())
@@ -55,15 +55,9 @@ class AFKBotFactory(ClientFactory):
         self.retry(connector)
 
     def retry(self, connector):
-        """Implements an exponential backoff for reconnection attempts."""
+        """Implements a fixed 1-second reconnection delay."""
         log.info(f"Reconnecting in {self.reconnect_delay} second(s)...")
         reactor.callLater(self.reconnect_delay, connector.connect)
-        self.reconnect_delay = min(self.reconnect_delay * 2, 300) # Exponential backoff up to 5 mins
-
-    def buildProtocol(self, addr):
-        # Reset the reconnect delay after a successful connection.
-        self.reconnect_delay = 5
-        return super().buildProtocol(addr)
 
 def check_server_connectivity(host, port, timeout=15):
     """
