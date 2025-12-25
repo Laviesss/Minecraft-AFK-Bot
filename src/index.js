@@ -128,7 +128,7 @@ function createBot() {
     botState.uptime = 0;
     if (uptimeInterval) clearInterval(uptimeInterval);
     uptimeInterval = setInterval(() => botState.uptime++, 1000);
-    const embed = new EmbedBuilder().setColor(0x55FF55).setTitle('✅ Bot Connected').setDescription(`Successfully connected to \`${bot.options.host}\` as \`${bot.username}\`.`);
+    const embed = new EmbedBuilder().setColor(0x55FF55).setTitle('✅ Bot Connected').setDescription(`Successfully connected to \`${config.host}\` as \`${bot.username}\`.`);
     sendMessageToChannel(embed);
   });
 
