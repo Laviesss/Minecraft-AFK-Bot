@@ -20,6 +20,7 @@ const botState = {
   coordinates: { x: 0, y: 0, z: 0 },
   isAfkEnabled: true,
   proxy: null,
+  dashboardUrl: null,
 };
 
 // --- Config ---
@@ -86,7 +87,9 @@ io.on('connection', (socket) => {
 });
 
 server.listen(listenerPort, () => {
-  console.log(`Web server listening on port ${listenerPort}`);
+  const externalUrl = process.env.RENDER_EXTERNAL_URL;
+  botState.dashboardUrl = externalUrl || `http://localhost:${listenerPort}`;
+  console.log(`Web server listening on ${botState.dashboardUrl}`);
   botState.serverAddress = `${config.host}:${config.port}`;
   botState.version = config.version || 'Auto-detected';
 });
