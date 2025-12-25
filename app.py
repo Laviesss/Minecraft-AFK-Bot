@@ -1,5 +1,6 @@
 import os
 import sys
+import socket
 import logging
 import threading
 from flask import Flask
@@ -64,6 +65,28 @@ class AFKBotFactory(ClientFactory):
         self.reconnect_delay = 5
         return super().buildProtocol(addr)
 
+def check_server_connectivity(host, port, timeout=15):
+    """
+    Performs a simple TCP connection test to a given host and port.
+    Returns True if the connection is successful, False otherwise.
+    """
+    log.info(f"Performing pre-flight network check to {host}:{port}...")
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.settimeout(timeout)
+            s.connect((host, port))
+            log.info("Network check successful. Port is open.")
+            return True
+    except socket.timeout:
+        log.error(f"Network check failed: Connection timed out after {timeout} seconds. This could be due to a firewall on the server's end or the server being offline.")
+        return False
+    except (socket.error, ConnectionRefusedError) as e:
+        log.error(f"Network check failed: {e}. The server is reachable but actively refused the connection.")
+        return False
+    except Exception as e:
+        log.error(f"An unexpected network error occurred: {e}")
+        return False
+
 def start_minecraft_bot():
     """Configures and starts the Minecraft bot connection."""
     server_address = os.environ.get("MC_SERVER_ADDRESS")
@@ -72,6 +95,11 @@ def start_minecraft_bot():
 
     if not server_address or not username:
         log.error("Missing required environment variables (MC_SERVER_ADDRESS, MC_USERNAME). The bot will not start.")
+        return
+
+    # Perform the pre-flight check. If it fails, stop here.
+    if not check_server_connectivity(server_address, server_port):
+        log.warning("Pre-flight check failed. The bot will not attempt to connect. Please check the server address and firewall settings.")
         return
 
     log.info(f"Attempting to connect to '{server_address}:{server_port}' as '{username}' in offline mode.")
