@@ -1,11 +1,13 @@
-const { Client, GatewayIntentBits, REST, Routes, SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+const { Client, GatewayIntentBits, REST, Routes, SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const proxyManager = require('./proxyManager');
+const { getDiscordMinimap } = require('./utils');
 
 let client;
 let botStateRef;
 let mineflayerBotRef;
 let channelWarningLogged = false;
 let configRef;
+let mcData;
 
 const commands = [
     new SlashCommandBuilder().setName('status').setDescription('✨ Displays the full status of the bot.'),
@@ -13,6 +15,12 @@ const commands = [
     new SlashCommandBuilder().setName('coords').setDescription('🗺️ Gets the bot\'s current coordinates.'),
     new SlashCommandBuilder().setName('players').setDescription('👥 Lists the players currently online.'),
     new SlashCommandBuilder().setName('uptime').setDescription('⏱️ Shows how long the bot has been online.'),
+    new SlashCommandBuilder().setName('inventory').setDescription('🎒 Lists the items in the bot\'s inventory.'),
+    new SlashCommandBuilder().setName('useitem').setDescription('✋ Uses the currently held item.'),
+    new SlashCommandBuilder().setName('look').setDescription('👀 Looks at the nearest player.'),
+    new SlashCommandBuilder().setName('move').setDescription('🏃‍♂️ Moves the bot in a direction.'),
+    new SlashCommandBuilder().setName('stop').setDescription('🛑 Stops the bot\'s movement.'),
+    new SlashCommandBuilder().setName('map').setDescription('🗺️ Shows a 5x5 map of the bot\'s surroundings.'),
     new SlashCommandBuilder().setName('say').setDescription('💬 Sends a message to the in-game chat.')
         .addStringOption(option =>
             option.setName('message')
@@ -38,48 +46,35 @@ async function initDiscord(state, config) {
     client = new Client({ intents: [GatewayIntentBits.Guilds] });
 
     client.on('interactionCreate', async interaction => {
-        if (!interaction.isChatInputCommand()) return;
+        const isButton = interaction.isButton();
+        if (!interaction.isChatInputCommand() && !isButton) return;
 
-        const { commandName } = interaction;
-        const isEphemeral = commandName === 'say' || commandName === 'validateproxies';
+        const { commandName, customId } = interaction;
+        const isEphemeral = commandName === 'say' || commandName === 'validateproxies' || isButton;
         await interaction.deferReply({ ephemeral: isEphemeral });
 
         if ((!mineflayerBotRef || !botStateRef.isOnline) && commandName !== 'validateproxies') {
-            const embed = new EmbedBuilder()
-                .setColor(0xFF5555) // Red
-                .setTitle('❌ Bot Offline')
-                .setDescription('The Minecraft bot is currently offline. Please wait for it to reconnect.');
+            const embed = new EmbedBuilder().setColor(0xFF5555).setTitle('❌ Bot Offline').setDescription('The Minecraft bot is currently offline.');
             return interaction.editReply({ embeds: [embed] });
         }
 
+        const isAdmin = configRef.admins.includes(interaction.user.username) || configRef.admins.includes(interaction.user.id);
+        const action = isButton ? customId : commandName;
+
         try {
-            const isAdmin = configRef.admins.includes(interaction.user.username) || configRef.admins.includes(interaction.user.id);
-
-            // --- ADMIN COMMANDS ---
-            if (commandName === 'validateproxies') {
-                if (!isAdmin) {
-                    const embed = new EmbedBuilder().setColor(0xFF5555).setTitle('⛔ Access Denied').setDescription('You do not have permission to use this command.');
-                    return interaction.editReply({ embeds: [embed] });
-                }
-
-                await interaction.editReply({ embeds: [new EmbedBuilder().setColor(0x5555FF).setTitle('🔄 Validating Proxies...').setDescription('Please wait, this may take a moment.')] });
-
+            if (action === 'validateproxies') {
+                if (!isAdmin) return interaction.editReply({ embeds: [new EmbedBuilder().setColor(0xFF5555).setTitle('⛔ Access Denied')] });
+                await interaction.editReply({ embeds: [new EmbedBuilder().setColor(0x5555FF).setTitle('🔄 Validating Proxies...')] });
                 const allProxies = await proxyManager.loadProxies();
                 const validProxies = await proxyManager.validateProxies(allProxies);
                 await proxyManager.writeProxies(validProxies);
                 proxyManager.setValidProxies(validProxies);
-
-                const embed = new EmbedBuilder()
-                    .setColor(0x55FF55) // Green
-                    .setTitle('✅ Validation Complete')
-                    .setDescription(`Finished validating proxies.\n**${validProxies.length} / ${allProxies.length}** are working.`);
-                return interaction.editReply({ embeds: [embed] });
+                return interaction.editReply({ embeds: [new EmbedBuilder().setColor(0x55FF55).setTitle('✅ Validation Complete').setDescription(`**${validProxies.length} / ${allProxies.length}** working.`)] });
             }
 
-            // --- USER COMMANDS ---
             const embed = new EmbedBuilder().setColor(0x0099FF).setTimestamp();
 
-            switch (commandName) {
+            switch (action) {
                 case 'status':
                     embed.setTitle('✨ Bot Status').addFields(
                         { name: 'Status', value: botStateRef.isOnline ? '🟢 Online' : '🔴 Offline', inline: true },
@@ -89,47 +84,85 @@ async function initDiscord(state, config) {
                     break;
                 case 'health':
                     embed.setTitle('❤️ Bot Health').addFields(
-                        { name: 'Health', value: `${Math.round(botStateRef.health)} / 20`, inline: true },
-                        { name: 'Hunger', value: `${Math.round(botStateRef.hunger)} / 20`, inline: true }
+                        { name: 'Health', value: `${Math.round(botStateRef.health)}/20`, inline: true },
+                        { name: 'Hunger', value: `${Math.round(botStateRef.hunger)}/20`, inline: true }
                     );
                     break;
                 case 'coords':
-                    const { x, y, z } = botStateRef.coordinates;
-                    embed.setTitle('🗺️ Bot Coordinates').setDescription(`X: \`${Math.round(x)}\` Y: \`${Math.round(y)}\` Z: \`${Math.round(z)}\``);
+                    embed.setTitle('🗺️ Coords').setDescription(`\`${botStateRef.coordinates.x.toFixed(0)}, ${botStateRef.coordinates.y.toFixed(0)}, ${botStateRef.coordinates.z.toFixed(0)}\``);
                     break;
                 case 'players':
-                    const playerList = botStateRef.playerList.join(', ') || 'No players online.';
-                    embed.setTitle(`👥 Players Online (${botStateRef.playerCount})`).setDescription(`\`\`\`${playerList}\`\`\``);
+                    embed.setTitle(`👥 Players (${botStateRef.playerCount})`).setDescription(`\`\`\`${botStateRef.playerList.join(', ') || 'None'}\`\`\``);
                     break;
                 case 'uptime':
-                    embed.setTitle('⏱️ Bot Uptime').setDescription(`The bot has been online for **${botStateRef.uptime}** seconds.`);
+                    embed.setTitle('⏱️ Uptime').setDescription(`${botStateRef.uptime} seconds.`);
+                    break;
+                case 'inventory':
+                    const items = mineflayerBotRef.inventory.items().map(i => `${i.displayName} x${i.count}`);
+                    embed.setTitle('🎒 Inventory').setDescription(items.length ? `\`\`\`${items.join('\n')}\`\`\`` : 'Empty.');
+                    break;
+                case 'useitem':
+                    mineflayerBotRef.activateItem();
+                    embed.setTitle('✋ Use Item').setDescription('Right-clicked with the held item.');
+                    break;
+                case 'look':
+                    const player = mineflayerBotRef.nearestEntity(e => e.type === 'player');
+                    if (player) {
+                        mineflayerBotRef.lookAt(player.position.offset(0, player.height, 0));
+                        embed.setTitle('👀 Look').setDescription(`Looking at ${player.username}.`);
+                    } else {
+                        embed.setTitle('👀 Look').setDescription('No players nearby.');
+                    }
+                    break;
+                case 'map':
+                    mcData = require('minecraft-data')(mineflayerBotRef.version);
+                    const minimap = getDiscordMinimap(mineflayerBotRef);
+                    embed.setTitle('🗺️ Minimap').setDescription(`\`\`\`\n${minimap}\`\`\``).setFooter({ text: '🤖 is you!' });
+                    break;
+                case 'move':
+                    const row = new ActionRowBuilder().addComponents(
+                        new ButtonBuilder().setCustomId('forward').setLabel('⬆️').setStyle(ButtonStyle.Primary),
+                        new ButtonBuilder().setCustomId('backward').setLabel('⬇️').setStyle(ButtonStyle.Primary),
+                        new ButtonBuilder().setCustomId('left').setLabel('⬅️').setStyle(ButtonStyle.Primary),
+                        new ButtonBuilder().setCustomId('right').setLabel('➡️').setStyle(ButtonStyle.Primary),
+                        new ButtonBuilder().setCustomId('stop').setLabel('🛑').setStyle(ButtonStyle.Danger)
+                    );
+                    embed.setTitle('🏃‍♂️ Move').setDescription('Use the buttons to move the bot.');
+                    return interaction.editReply({ embeds: [embed], components: [row] });
+                case 'forward':
+                case 'backward':
+                case 'left':
+                case 'right':
+                    mineflayerBotRef.setControlState(action, true);
+                    setTimeout(() => mineflayerBotRef.setControlState(action, false), 500);
+                    embed.setDescription(`Moving ${action}...`);
+                    break;
+                case 'stop':
+                    mineflayerBotRef.clearControlStates();
+                    embed.setDescription('Movement stopped.');
                     break;
                 case 'say':
                     const message = interaction.options.getString('message');
                     mineflayerBotRef.chat(message);
-                    embed.setColor(0xAAAAAA).setTitle('💬 Message Sent').setDescription(`Successfully sent message: \`${message}\``);
+                    embed.setColor(0xAAAAAA).setTitle('💬 Message Sent').setDescription(`\`${message}\``);
                     break;
             }
             await interaction.editReply({ embeds: [embed] });
         } catch (error) {
-            console.error('Error handling interaction:', error);
-            const errorEmbed = new EmbedBuilder().setColor(0xFF5555).setTitle('❌ An Error Occurred').setDescription('Something went wrong while processing your command.');
-            if (interaction.deferred || interaction.replied) {
-                await interaction.editReply({ embeds: [errorEmbed], ephemeral: true });
-            } else {
-                await interaction.reply({ embeds: [errorEmbed], ephemeral: true });
-            }
+            console.error('Interaction Error:', error);
+            const errorEmbed = new EmbedBuilder().setColor(0xFF5555).setTitle('❌ Error').setDescription('An error occurred.');
+            if (interaction.deferred || interaction.replied) await interaction.editReply({ embeds: [errorEmbed], ephemeral: true });
+            else await interaction.reply({ embeds: [errorEmbed], ephemeral: true });
         }
     });
 
-    client.on('clientReady', async () => {
+    client.on('ready', async () => {
         console.log(`Discord bot logged in as ${client.user.tag}!`);
         const rest = new REST({ version: '10' }).setToken(token);
         try {
-            console.log('Refreshing application (/) commands.');
             await rest.put(Routes.applicationCommands(client.user.id), { body: commands });
         } catch (error) {
-            console.error('Error reloading application commands:', error);
+            console.error('Error refreshing commands:', error);
         }
     });
 
@@ -144,7 +177,7 @@ function sendMessageToChannel(embed) {
     if (channel) {
         channel.send({ embeds: [embed] }).catch(console.error);
     } else if (!channelWarningLogged) {
-        console.warn(`Could not find Discord channel with ID: ${channelId}. Further warnings will be suppressed.`);
+        console.warn(`Could not find Discord channel ID: ${channelId}.`);
         channelWarningLogged = true;
     }
 }

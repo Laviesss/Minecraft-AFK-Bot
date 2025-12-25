@@ -12,11 +12,13 @@
     "discord.js": "^14.25.1",
     "dotenv": "^17.2.3",
     "express": "^4.19.2",
+    "minecraft-data": "^3.102.2",
     "mineflayer": "^4.20.1",
     "proxy-agent": "^6.5.0",
     "socket.io": "^4.8.3",
     "socket.io-client": "^4.8.3",
-    "socks": "^2.8.7"
+    "socks": "^2.8.7",
+    "vec3": "^0.1.10"
   },
   "engines": {
     "node": "^22.0.0"

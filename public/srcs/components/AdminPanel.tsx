@@ -1,5 +1,6 @@
 import React from 'react';
 import { BotState } from '../types';
+import AdminButton from './AdminButton';
 
 interface AdminPanelProps {
   botState: BotState;
@@ -17,18 +18,18 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ botState, onToggleAfk, onValida
     <div className="bg-slate-900 border border-slate-700 rounded-lg p-4 h-full flex flex-col">
       <h2 className="text-sm font-bold uppercase tracking-wider text-slate-400 mb-3">Admin Controls</h2>
       <div className="flex flex-col space-y-2">
-        <button onClick={onToggleAfk} className={`p-2 rounded text-white font-bold ${botState.isAfkEnabled ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'}`}>
+        <AdminButton onClick={onToggleAfk} className={botState.isAfkEnabled ? 'bg-green-600/50 hover:bg-green-700/70' : 'bg-red-600/50 hover:bg-red-700/70'}>
           Anti-AFK: {botState.isAfkEnabled ? 'ON' : 'OFF'}
-        </button>
+        </AdminButton>
         {actions.map(action => (
-          <button key={action} onClick={() => onAction(action)} className="bg-slate-700 hover:bg-slate-600 p-2 rounded text-white font-bold">
+          <AdminButton key={action} onClick={() => onAction(action)}>
             {action}
-          </button>
+          </AdminButton>
         ))}
-        <button onClick={onValidateProxies} disabled={isValidating} className="bg-blue-600 hover:bg-blue-700 p-2 rounded text-white font-bold disabled:bg-slate-500">
+        <AdminButton onClick={onValidateProxies} disabled={isValidating}>
           {isValidating ? 'Validating...' : 'Validate Proxies'}
-        </button>
-        {validationMsg && <p className="text-xs text-center text-green-400">{validationMsg}</p>}
+        </AdminButton>
+        {validationMsg && <p className="text-xs text-center text-green-400 mt-2">{validationMsg}</p>}
       </div>
     </div>
   );

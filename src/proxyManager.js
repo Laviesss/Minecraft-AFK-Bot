@@ -4,6 +4,13 @@ const { Agent } = require('proxy-agent');
 let validProxies = [];
 let currentProxyIndex = 0;
 
+async function initialize() {
+    const allProxies = await loadProxies();
+    const validatedProxies = await validateProxies(allProxies);
+    await writeProxies(validatedProxies);
+    setValidProxies(validatedProxies);
+}
+
 async function loadProxies() {
     try {
         const data = await fs.readFile('proxies.txt', 'utf8');
@@ -91,6 +98,7 @@ function getNextProxy() {
 }
 
 module.exports = {
+    initialize,
     loadProxies,
     writeProxies,
     validateProxies,

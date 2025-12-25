@@ -4,8 +4,11 @@ const express = require('express');
 const http = require('http');
 const { Server } = require("socket.io");
 const path = require('path');
+const { Vec3 } = require('vec3');
 const { initDiscord, sendMessageToChannel, updateBotInstance, EmbedBuilder } = require('./discord');
 const proxyManager = require('./proxyManager');
+const mc = require('minecraft-data');
+const { getWebMinimap } = require('./utils');
 
 // --- Global State ---
 const botState = {
@@ -63,26 +66,53 @@ io.on('connection', (socket) => {
     io.emit('chat', `[SYSTEM] Anti-AFK is now ${botState.isAfkEnabled ? 'ON' : 'OFF'}.`);
   });
 
-  socket.on('validate-proxies', async () => {
-    const allProxies = await proxyManager.loadProxies();
-    const validProxies = await proxyManager.validateProxies(allProxies);
-    await proxyManager.writeProxies(validProxies);
-    proxyManager.setValidProxies(validProxies);
-    socket.emit('validation-result', `Validation complete. ${validProxies.length}/${allProxies.length} proxies are working.`);
+  socket.on('get-inventory', () => {
+    if (bot && botState.isOnline) {
+      const items = bot.inventory.items().map(item => ({ name: item.displayName, count: item.count }));
+      socket.emit('inventory-update', items);
+    }
+  });
+
+  socket.on('use-item', () => {
+    if (bot && botState.isOnline) {
+      bot.activateItem();
+      io.emit('chat', '[SYSTEM] Used held item.');
+    }
+  });
+
+  socket.on('look-at-player', () => {
+    if (bot && botState.isOnline) {
+      const nearestPlayer = bot.nearestEntity(entity => entity.type === 'player');
+      if (nearestPlayer) {
+        bot.lookAt(nearestPlayer.position.offset(0, nearestPlayer.height, 0));
+        io.emit('chat', `[SYSTEM] Looking at ${nearestPlayer.username}.`);
+      } else {
+        io.emit('chat', '[SYSTEM] No players nearby.');
+      }
+    }
+  });
+
+  socket.on('move', (direction) => {
+    if (bot && botState.isOnline) {
+      bot.setControlState(direction, true);
+      setTimeout(() => bot.setControlState(direction, false), 200);
+    }
+  });
+
+  socket.on('stop-move', (direction) => {
+     if (bot && botState.isOnline) {
+       bot.clearControlStates();
+     }
+  });
+
+  socket.on('get-minimap', () => {
+    if (!bot || !botState.isOnline || !mcData) return;
+    const minimap = getWebMinimap(bot, mcData);
+    socket.emit('minimap-update', minimap);
   });
 
   socket.on('reconnect-bot', () => {
     if (bot) bot.end('Manual reconnect triggered from dashboard.');
-  });
-
-  socket.on('force-respawn', () => {
-    if (bot && botState.isOnline) bot.chat('/kill');
-  });
-
-  socket.on('drop-inventory', () => {
-      if (!bot || !botState.isOnline) return;
-      const items = bot.inventory.items();
-      items.forEach(item => bot.tossStack(item));
   });
 });
 
@@ -103,6 +133,7 @@ setInterval(() => {
 let bot;
 let antiAfkInterval;
 let uptimeInterval;
+let mcData;
 
 function createBot() {
   const proxyDetails = proxyManager.getNextProxy();
@@ -126,6 +157,7 @@ function createBot() {
     console.log(`Logged in as '${bot.username}'.`);
     botState.isOnline = true;
     botState.uptime = 0;
+    mcData = mc(bot.version);
     if (uptimeInterval) clearInterval(uptimeInterval);
     uptimeInterval = setInterval(() => botState.uptime++, 1000);
     const embed = new EmbedBuilder().setColor(0x55FF55).setTitle('✅ Bot Connected').setDescription(`Successfully connected to \`${config.host}\` as \`${bot.username}\`.`);
@@ -177,7 +209,7 @@ function createBot() {
   function handleCommand(username, message) {
     if (Date.now() - lastCmdTime < 3000) return;
     lastCmdTime = Date.now();
-    const [command] = message.substring(1).split(' ');
+    const [command, ...args] = message.substring(1).split(' ');
     const isAdmin = config.admins.includes(username);
     switch (command.toLowerCase()) {
       case 'status': bot.chat(`Online | Uptime: ${botState.uptime}s`); break;
@@ -186,12 +218,39 @@ function createBot() {
       case 'players': bot.chat(`Players (${botState.playerCount}): ${botState.playerList.join(', ')}`); break;
       case 'ping': bot.chat(`Your ping: ${bot.players[username]?.ping ?? 'N/A'}ms.`); break;
       case 'uptime': bot.chat(`Uptime: ${botState.uptime}s.`); break;
-      case 'help': bot.chat('Commands: !status, !health, !coords, !players, !ping, !uptime, !afk'); break;
+      case 'help': bot.chat('Commands: !status, !health, !coords, !players, !ping, !uptime, !afk, !inventory, !useitem, !look, !move, !stop'); break;
       case 'afk':
         if (!isAdmin) return bot.chat("You don't have permission.");
         botState.isAfkEnabled = !botState.isAfkEnabled;
         bot.chat(`Anti-AFK is now ${botState.isAfkEnabled ? 'ON' : 'OFF'}.`);
         break;
+      case 'inventory':
+        const items = bot.inventory.items().map(item => `${item.displayName} x${item.count}`);
+        bot.chat(items.length ? `Inventory: ${items.join(', ')}` : 'Inventory is empty.');
+        break;
+      case 'useitem':
+        bot.activateItem();
+        bot.chat('Used held item.');
+        break;
+      case 'look':
+        const nearestPlayer = bot.nearestEntity(entity => entity.type === 'player');
+        if (nearestPlayer) {
+          bot.lookAt(nearestPlayer.position.offset(0, nearestPlayer.height, 0));
+          bot.chat(`Looking at ${nearestPlayer.username}.`);
+        } else {
+          bot.chat('No players nearby.');
+        }
+        break;
+      case 'move':
+        if (!isAdmin) return bot.chat("You don't have permission.");
+        bot.setControlState('forward', true);
+        bot.chat('Moving forward.');
+        break;
+       case 'stop':
+         if (!isAdmin) return bot.chat("You don't have permission.");
+         bot.clearControlStates();
+         bot.chat('Stopped moving.');
+         break;
     }
   }
 
@@ -221,11 +280,7 @@ function createBot() {
 
 // --- Initial Setup ---
 async function start() {
-  const allProxies = await proxyManager.loadProxies();
-  const validProxies = await proxyManager.validateProxies(allProxies);
-  await proxyManager.writeProxies(validProxies);
-  proxyManager.setValidProxies(validProxies);
-
+  await proxyManager.initialize();
   initDiscord(botState, config);
   createBot();
 }

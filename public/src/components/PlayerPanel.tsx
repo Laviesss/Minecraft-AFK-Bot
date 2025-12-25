@@ -18,12 +18,19 @@ const PlayerPanel: React.FC<PlayerPanelProps> = ({ botState }) => {
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider">Currently Online</h3>
         <span className="px-2 py-0.5 bg-slate-800 text-cyan-400 text-xs rounded-full font-bold">
-          {botState.playerCount}
+          {botState.isOnline ? botState.playerCount : 'N/A'}
         </span>
       </div>
 
       <div className="flex-1 bg-slate-950/50 rounded-lg border border-slate-800 p-3 overflow-y-auto">
-        {botState.playerList.length > 0 ? (
+        {!botState.isOnline ? (
+          <div className="h-full flex flex-col items-center justify-center text-slate-600 py-8">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 mb-2 opacity-20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 5.636a9 9 0 010 12.728m-12.728 0a9 9 0 010-12.728m12.728 0L5.636 18.364" />
+            </svg>
+            <p className="text-sm italic">Bot is offline</p>
+          </div>
+        ) : botState.playerList.length > 0 ? (
           <ul className="space-y-2">
             {botState.playerList.map((player, idx) => (
               <li key={idx} className="flex items-center justify-between p-2 rounded hover:bg-slate-900/50 group transition-colors">

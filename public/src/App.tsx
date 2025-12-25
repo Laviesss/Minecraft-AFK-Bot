@@ -1,9 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { BotState, ChatMessage } from './types';
+import { BotState, ChatMessage, InventoryItem, Minimap } from './types';
 import StatusPanel from './components/StatusPanel';
 import ChatPanel from './components/ChatPanel';
 import PlayerPanel from './components/PlayerPanel';
 import AdminPanel from './components/AdminPanel';
+import MinimapPanel from './components/MinimapPanel';
+import InventoryPanel from './components/InventoryPanel';
+import MovementPanel from './components/MovementPanel';
 import * as socket from './socket';
 
 const App: React.FC = () => {
@@ -21,16 +24,13 @@ const App: React.FC = () => {
   });
 
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [inventory, setInventory] = useState<InventoryItem[]>([]);
+  const [minimap, setMinimap] = useState<Minimap>(Array(5).fill(Array(5).fill('#000')));
   const [isValidating, setIsValidating] = useState(false);
   const [validationMsg, setValidationMsg] = useState<string | null>(null);
 
   useEffect(() => {
-    // Listen for state updates from the server
-    socket.onStateUpdate((newState: BotState) => {
-      setBotState(newState);
-    });
-
-    // Listen for new chat messages
+    socket.onStateUpdate(setBotState);
     socket.onChatUpdate((messageText: string) => {
       const newMessage: ChatMessage = {
         id: Date.now().toString(),
@@ -40,46 +40,44 @@ const App: React.FC = () => {
       };
       setChatMessages(prev => [...prev.slice(-99), newMessage]);
     });
-
-    // Listen for proxy validation results
     socket.onValidationResult((message: string) => {
         setIsValidating(false);
         setValidationMsg(message);
         setTimeout(() => setValidationMsg(null), 5000);
     });
+    socket.onInventoryUpdate(setInventory);
+    socket.onMinimapUpdate(setMinimap);
 
-  }, []);
+    const inventoryInterval = setInterval(() => {
+        if(botState.isOnline) socket.emitGetInventory();
+    }, 2000);
 
-  const handleSendMessage = useCallback((msg: string) => {
-    socket.emitSendMessage(msg);
-  }, []);
+    const minimapInterval = setInterval(() => {
+        if(botState.isOnline) socket.emitGetMinimap();
+    }, 1000);
 
-  const toggleAfk = useCallback(() => {
-    socket.emitToggleAfk();
-  }, []);
+    return () => {
+        clearInterval(inventoryInterval);
+        clearInterval(minimapInterval);
+    }
+  }, [botState.isOnline]);
 
+  const handleSendMessage = useCallback((msg: string) => socket.emitSendMessage(msg), []);
+  const toggleAfk = useCallback(() => socket.emitToggleAfk(), []);
   const validateProxies = useCallback(() => {
     setIsValidating(true);
     setValidationMsg(null);
     socket.emitValidateProxies();
   }, []);
+  const handleMove = useCallback((direction: 'forward' | 'backward' | 'left' | 'right') => socket.emitMove(direction), []);
+  const handleStopMove = useCallback(() => socket.emitStopMove(), []);
 
   const handleAdminAction = useCallback((action: string) => {
-    const newMessage: ChatMessage = {
-      id: Date.now().toString(),
-      text: `[SYSTEM] Executing: ${action}...`,
-      timestamp: Date.now(),
-      isSystem: true
-    };
-    setChatMessages(prev => [...prev.slice(-99), newMessage]);
-
-    if (action === 'Clear Local Chat') {
-      setChatMessages([]);
-      return;
-    }
-    if (action === 'Reconnect Bot') socket.emitReconnect();
-    if (action === 'Force Respawn') socket.emitRespawn();
-    if (action === 'Drop Inventory') socket.emitDropInventory();
+    setChatMessages(prev => [...prev.slice(-99), { id: Date.now().toString(), text: `[SYSTEM] Executing: ${action}...`, timestamp: Date.now(), isSystem: true }]);
+    if (action === 'Clear Local Chat') setChatMessages([]);
+    else if (action === 'Reconnect Bot') socket.emitReconnect();
+    else if (action === 'Use Held Item') socket.emitUseItem();
+    else if (action === 'Look at Nearest Player') socket.emitLookAtPlayer();
   }, []);
 
   return (
@@ -89,7 +87,7 @@ const App: React.FC = () => {
           <h1 className="text-3xl font-black tracking-tighter bg-gradient-to-r from-cyan-400 via-purple-400 to-purple-600 bg-clip-text text-transparent italic">
             AFK BOT COMMAND
           </h1>
-          <p className="text-slate-500 text-xs font-mono uppercase tracking-widest">v2.4.0 • STABLE CONNECTION</p>
+          <p className="text-slate-500 text-xs font-mono uppercase tracking-widest">v3.0.0 • INTERACTIVE</p>
         </div>
         <div className="flex items-center gap-6">
           <div className="flex flex-col items-end">
@@ -103,18 +101,21 @@ const App: React.FC = () => {
       </header>
 
       <main className="w-full max-w-7xl grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatusPanel botState={botState} />
+        <div className="lg:col-span-1 space-y-6">
+            <StatusPanel botState={botState} />
+            <PlayerPanel botState={botState} />
+        </div>
         <div className="lg:col-span-2">
-          <ChatPanel
-            messages={chatMessages}
-            onSendMessage={handleSendMessage}
-          />
+          <ChatPanel messages={chatMessages} onSendMessage={handleSendMessage} />
         </div>
         <div className="space-y-6 lg:col-span-1">
-          <div className="h-1/2 min-h-[300px]">
-            <PlayerPanel botState={botState} />
-          </div>
-          <div className="h-1/2 min-h-[350px]">
+            <MinimapPanel minimap={minimap} />
+            <InventoryPanel inventory={inventory} />
+        </div>
+        <div className="lg:col-span-2 space-y-6">
+            <MovementPanel onMove={handleMove} onStop={handleStopMove} />
+        </div>
+        <div className="lg:col-span-2 space-y-6">
             <AdminPanel
               botState={botState}
               onToggleAfk={toggleAfk}
@@ -123,13 +124,12 @@ const App: React.FC = () => {
               validationMsg={validationMsg}
               onAction={handleAdminAction}
             />
-          </div>
         </div>
       </main>
 
       <footer className="mt-12 w-full max-w-7xl border-t border-slate-900 pt-6 flex justify-between text-slate-600 text-[10px] font-mono uppercase tracking-widest">
         <span>© {new Date().getFullYear()} MC-AFK-CORE</span>
-        <span>Latency: {botState.ping}ms</span>
+        <span>Latency: {botState.ping ?? 0}ms</span>
       </footer>
     </div>
   );
