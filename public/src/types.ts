@@ -1,3 +1,14 @@
+export interface Coordinates {
+  x: number;
+  y: number;
+  z: number;
+}
+
+export interface Player {
+  username: string;
+  ping: number;
+}
+
 export interface BotState {
   isOnline: boolean;
   serverAddress: string;
@@ -5,11 +16,28 @@ export interface BotState {
   uptime: number;
   health: number;
   hunger: number;
-  coordinates: { x: number; y: number; z: number };
+  coordinates: Coordinates;
   proxy: string | null;
   playerCount: number;
-  playerList: { username: string; ping: number }[];
+  playerList: Player[];
   isAfkEnabled: boolean;
+}
+
+export interface MinimapBlock {
+  type: string;
+  height: number;
+}
+
+export interface MinimapData {
+  map: MinimapBlock[][];
+  bot: {
+    yaw: number;
+  };
+  players: {
+    x: number;
+    z: number;
+    username: string;
+  }[];
 }
 
 export interface InventoryItem {
@@ -17,22 +45,4 @@ export interface InventoryItem {
   count: number;
 }
 
-export interface MinimapData {
-  bot: {
-    x: number;
-    y: number;
-    z: number;
-    yaw: number;
-  };
-  map: {
-    x: number;
-    z: number;
-    type: string;
-    height: number;
-  }[];
-  players: {
-    username: string;
-    x: number;
-    z: number;
-  }[];
-}
+export type MoveDirection = 'forward' | 'back' | 'left' | 'right' | 'jump' | 'sprint' | 'sneak';

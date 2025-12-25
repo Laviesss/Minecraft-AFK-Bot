@@ -1,55 +1,96 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Socket } from 'socket.io-client';
 
 interface ChatPanelProps {
   messages: string[];
-  socket: Socket;
+  onSendMessage: (msg: string) => void;
 }
 
-const ChatPanel: React.FC<ChatPanelProps> = ({ messages, socket }) => {
-  const [message, setMessage] = useState('');
-  const chatLogRef = useRef<HTMLDivElement>(null);
+const ChatPanel: React.FC<ChatPanelProps> = ({ messages, onSendMessage }) => {
+  const [inputValue, setInputValue] = useState('');
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (chatLogRef.current) {
-      chatLogRef.current.scrollTop = chatLogRef.current.scrollHeight;
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages]);
 
   const handleSend = () => {
-    if (message.trim()) {
-      socket.emit('chat-message', message);
-      setMessage('');
+    if (inputValue.trim()) {
+      onSendMessage(inputValue);
+      setInputValue('');
     }
   };
 
-  const parseMessage = (msg: string) => {
-    const match = msg.match(/<([^>]+)> (.*)/);
-    if (match) {
-        return (<span>&lt;<span className="text-cyan-400">{match[1]}</span>&gt; {match[2]}</span>);
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') handleSend();
+  };
+
+  const renderMessage = (msg: string, index: number) => {
+    // Basic detection for <User> message vs [SYSTEM]
+    if (msg.startsWith('[SYSTEM]')) {
+      return (
+        <div key={index} className="py-1 text-slate-500 text-sm italic">
+          {msg}
+        </div>
+      );
     }
-    return <span className="text-slate-400">{msg}</span>;
-  }
+
+    // Attempt to colorize <Username>
+    const match = msg.match(/^<([^>]+)>(.*)$/);
+    if (match) {
+      return (
+        <div key={index} className="py-1 text-sm break-words leading-relaxed">
+          <span className="text-[#00FFFF] font-bold mono mr-2">&lt;{match[1]}&gt;</span>
+          <span className="text-slate-200">{match[2]}</span>
+        </div>
+      );
+    }
+
+    return (
+      <div key={index} className="py-1 text-sm text-slate-300 break-words leading-relaxed">
+        {msg}
+      </div>
+    );
+  };
 
   return (
-    <div className="bg-slate-900 p-4 rounded-lg shadow-lg h-[600px] flex flex-col">
-      <h2 className="text-xl font-bold text-cyan-400 mb-4 border-b border-slate-700 pb-2">Live Chat</h2>
-      <div ref={chatLogRef} className="flex-grow overflow-y-auto mb-4 pr-2">
-        {messages.map((msg, i) => (
-          <p key={i} className="text-sm mb-1 font-mono">{parseMessage(msg)}</p>
-        ))}
+    <div className="flex flex-col h-full bg-[#0f172a] rounded-xl border border-slate-800 shadow-xl overflow-hidden">
+      <div className="p-4 border-b border-slate-800 bg-[#0f172a] flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <div className="w-2 h-2 rounded-full bg-[#00FFFF] shadow-[0_0_8px_rgba(0,255,255,0.6)]" />
+          <h2 className="text-lg font-bold tracking-tight">LIVE CHAT</h2>
+        </div>
+        <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Global Stream</span>
       </div>
-      <div className="flex">
+
+      <div
+        ref={scrollRef}
+        className="flex-grow overflow-y-auto p-4 space-y-1 bg-[#020617]/50"
+      >
+        {messages.length === 0 ? (
+          <div className="h-full flex items-center justify-center text-slate-600 text-sm italic">
+            Waiting for activity...
+          </div>
+        ) : (
+          messages.map((msg, idx) => renderMessage(msg, idx))
+        )}
+      </div>
+
+      <div className="p-4 bg-[#0f172a] border-t border-slate-800 flex gap-2">
         <input
           type="text"
-          value={message}
-          onChange={e => setMessage(e.target.value)}
-          onKeyPress={e => e.key === 'Enter' && handleSend()}
+          value={inputValue}
+          onChange={(e) => setInputValue(e.target.value)}
+          onKeyDown={handleKeyDown}
           placeholder="Send a message..."
-          className="flex-grow bg-slate-800 border border-slate-700 rounded-l-md p-2 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+          className="flex-grow bg-[#1e293b] border border-slate-700 rounded-lg px-4 py-2 text-sm text-slate-200 focus:outline-none focus:border-[#00FFFF] transition-colors"
         />
-        <button onClick={handleSend} className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-r-md">
-          Send
+        <button
+          onClick={handleSend}
+          className="bg-[#8A2BE2] hover:bg-[#9d46f5] text-white px-6 py-2 rounded-lg text-sm font-bold transition-all shadow-lg shadow-[#8A2BE2]/20 active:scale-95"
+        >
+          SEND
         </button>
       </div>
     </div>
