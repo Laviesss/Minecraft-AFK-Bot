@@ -72,6 +72,7 @@ io.on('connection', (socket) => {
   });
 
   socket.on('get-inventory', () => {
+    console.log('[Socket] Received get-inventory');
     if (bot && botState.isOnline) {
       const items = bot.inventory.items().map(item => ({ name: item.displayName, count: item.count }));
       socket.emit('inventory-update', items);
@@ -79,6 +80,7 @@ io.on('connection', (socket) => {
   });
 
   socket.on('use-item', () => {
+    console.log('[Socket] Received use-item');
     if (bot && botState.isOnline) {
       bot.activateItem();
       io.emit('chat', '[SYSTEM] Used held item.');
@@ -86,6 +88,7 @@ io.on('connection', (socket) => {
   });
 
   socket.on('look-at-player', () => {
+    console.log('[Socket] Received look-at-player');
     if (bot && botState.isOnline) {
       const nearestPlayer = bot.nearestEntity(entity => entity.type === 'player');
       if (nearestPlayer) {
@@ -98,6 +101,7 @@ io.on('connection', (socket) => {
   });
 
   socket.on('move', (direction) => {
+    console.log(`[Socket] Received move: ${direction}`);
     if (bot && botState.isOnline) {
       const correctedDirection = direction === 'backward' ? 'back' : direction;
       bot.setControlState(correctedDirection, true);
@@ -106,18 +110,21 @@ io.on('connection', (socket) => {
   });
 
   socket.on('stop-move', (direction) => {
+    console.log('[Socket] Received stop-move');
      if (bot && botState.isOnline) {
        bot.clearControlStates();
      }
   });
 
   socket.on('get-minimap', () => {
+    console.log('[Socket] Received get-minimap');
     if (!bot || !botState.isOnline || !mcData) return;
     const minimap = getWebMinimap(bot, mcData);
     socket.emit('minimap-update', minimap);
   });
 
   socket.on('reconnect-bot', () => {
+    console.log('[Socket] Received reconnect-bot');
     if (bot) bot.end('Manual reconnect triggered from dashboard.');
   });
 });
@@ -160,7 +167,7 @@ function createBot() {
   updateBotInstance(bot);
 
   bot.on('login', () => {
-    console.log(`[Bot] Logged in as '${bot.username}' to ${bot.socket.remoteAddress}`);
+    console.log(`[Bot] Logged in as '${bot.username}'.`);
     botState.isOnline = true;
     botState.uptime = 0;
     mcData = mc(bot.version);
