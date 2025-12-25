@@ -5,6 +5,7 @@ const express = require('express');
 const host = process.env.MC_SERVER_ADDRESS;
 const port = parseInt(process.env.MC_SERVER_PORT || 25565, 10);
 const username = process.env.MC_USERNAME;
+const version = process.env.MC_VERSION; // Optional: specify Minecraft version
 
 if (!host || !username) {
   console.error('Missing required environment variables: MC_SERVER_ADDRESS and MC_USERNAME. The bot will not start.');
@@ -27,16 +28,22 @@ app.listen(listenerPort, () => {
 let bot;
 
 function createBot() {
-  console.log(`Attempting to connect to ${host}:${port} as ${username}`);
+  let versionLog = version ? `on version ${version}` : `(auto-detecting version)`;
+  console.log(`Attempting to connect to ${host}:${port} as ${username} ${versionLog}`);
 
-  bot = mineflayer.createBot({
+  const botOptions = {
     host: host,
     port: port,
     username: username,
-    // Mineflayer's auth is 'mojang' for premium or 'microsoft' for MSA.
-    // For offline mode ('cracked') servers, we don't specify an auth method.
-    checkTimeoutInterval: 15 * 1000, // 15-second timeout for connection.
-  });
+    auth: 'offline', // Explicitly for cracked servers
+    checkTimeoutInterval: 15 * 1000, // 15-second timeout for connection
+  };
+
+  if (version) {
+    botOptions.version = version;
+  }
+
+  bot = mineflayer.createBot(botOptions);
 
   // --- Bot Event Handlers ---
   bot.on('login', () => {

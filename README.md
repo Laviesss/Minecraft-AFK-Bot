@@ -13,6 +13,7 @@ The bot is configured using environment variables on Render. You will need to se
 *   `MC_SERVER_ADDRESS`: The address of the Minecraft server (e.g., `mc.example.com`).
 *   `MC_USERNAME`: The username for the bot to use (for offline-mode servers).
 *   `MC_SERVER_PORT` (Optional): The port of the Minecraft server. Defaults to `25565`.
+*   `MC_VERSION` (Highly Recommended): The Minecraft version of the server (e.g., `1.18.2`). **This is often required for a successful connection.** You can usually find the correct version on your server's main page (like on Aternos).
 
 ## How to Deploy on Render
 
