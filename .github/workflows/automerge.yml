@@ -1,0 +1,29 @@
+name: Auto Merge Jules Pushes
+
+# Trigger workflow on any push to Jules branch
+on:
+  push:
+    branches:
+      - feat/robust-bot-architecture-17697359144884957104
+
+jobs:
+  auto-merge:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+
+      - name: Merge Jules branch into main
+        run: |
+          git checkout main
+          git pull origin main
+          git merge origin/feat/robust-bot-architecture-17697359144884957104 --no-ff -m "Auto-merge Jules push"
+
+      - name: Push merged changes
+        run: git push origin main
