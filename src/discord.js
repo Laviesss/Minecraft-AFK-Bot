@@ -41,8 +41,8 @@ async function initDiscord(state, config) {
         if (!interaction.isChatInputCommand()) return;
 
         const { commandName } = interaction;
-        const isSayCommand = commandName === 'say';
-        await interaction.deferReply({ ephemeral: isSayCommand });
+        const isEphemeral = commandName === 'say' || commandName === 'validateproxies';
+        await interaction.deferReply({ ephemeral: isEphemeral });
 
         if ((!mineflayerBotRef || !botStateRef.isOnline) && commandName !== 'validateproxies') {
             const embed = new EmbedBuilder()

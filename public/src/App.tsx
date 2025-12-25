@@ -129,7 +129,7 @@ const App: React.FC = () => {
 
       <footer className="mt-12 w-full max-w-7xl border-t border-slate-900 pt-6 flex justify-between text-slate-600 text-[10px] font-mono uppercase tracking-widest">
         <span>© {new Date().getFullYear()} MC-AFK-CORE</span>
-        <span>Latency: --ms • Threads: -- • Mem: --MB</span>
+        <span>Latency: {botState.ping}ms</span>
       </footer>
     </div>
   );

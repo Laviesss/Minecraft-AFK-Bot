@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "build:frontend": "esbuild public/src/index.tsx --bundle --outfile=public/bundle.js --jsx=automatic"
+    "build:frontend": "esbuild public/src/index.tsx --bundle --outfile=public/bundle.js --jsx=automatic",
+    "postinstall": "npm run build:frontend"
   },
   "dependencies": {
     "discord.js": "^14.25.1",
@@ -18,7 +19,7 @@
     "socks": "^2.8.7"
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": "^22.0.0"
   },
   "devDependencies": {
     "esbuild": "^0.27.2",

@@ -6,3 +6,6 @@
 
 # Log files
 *.log
+
+# Build artifacts
+public/bundle.js
