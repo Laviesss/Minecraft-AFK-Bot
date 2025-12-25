@@ -1,5 +1,18 @@
-# Add your SOCKS5 proxies here.
-# Format: HOST:PORT
-# or with authentication: USER:PASS@HOST:PORT
-# Example: 127.0.0.1:9050
-# Example: myuser:mypass@192.168.1.1:1080
+# Add your proxies here, one per line.
+# The full protocol MUST be included.
+
+# --- EXAMPLES ---
+# HTTP Proxy:
+# http://host:port
+# http://user:pass@host:port
+
+# SOCKS5 Proxy:
+# socks5://host:port
+# socks5://user:pass@host:port
+
+# SOCKS4 Proxy:
+# socks4://host:port
+
+# Example:
+# http://127.0.0.1:8080
+# socks5://myuser:mypass@192.168.1.1:1080
