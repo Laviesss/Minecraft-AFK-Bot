@@ -1333,7 +1333,7 @@
           return dispatcher;
         }
         "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ && "function" === typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart && __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(Error());
-        var React4 = require_react(), Internals = {
+        var React11 = require_react(), Internals = {
           d: {
             f: noop,
             r: function() {
@@ -1351,7 +1351,7 @@
           },
           p: 0,
           findDOMNode: null
-        }, REACT_PORTAL_TYPE = /* @__PURE__ */ Symbol.for("react.portal"), ReactSharedInternals = React4.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
+        }, REACT_PORTAL_TYPE = /* @__PURE__ */ Symbol.for("react.portal"), ReactSharedInternals = React11.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
         "function" === typeof Map && null != Map.prototype && "function" === typeof Map.prototype.forEach && "function" === typeof Set && null != Set.prototype && "function" === typeof Set.prototype.clear && "function" === typeof Set.prototype.forEach || console.error(
           "React depends on Map and Set built-in types. Make sure that you load a polyfill in older browsers. https://reactjs.org/link/react-polyfills"
         );
@@ -2886,7 +2886,7 @@
           "number" === type && getActiveElement(node.ownerDocument) === node || node.defaultValue === "" + value2 || (node.defaultValue = "" + value2);
         }
         function validateOptionProps(element, props) {
-          null == props.value && ("object" === typeof props.children && null !== props.children ? React4.Children.forEach(props.children, function(child) {
+          null == props.value && ("object" === typeof props.children && null !== props.children ? React11.Children.forEach(props.children, function(child) {
             null == child || "string" === typeof child || "number" === typeof child || "bigint" === typeof child || didWarnInvalidChild || (didWarnInvalidChild = true, console.error(
               "Cannot infer the option value of complex children. Pass a `value` prop or use a plain string as children to <option>."
             ));
@@ -18518,14 +18518,14 @@
           ));
         }
         "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ && "function" === typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart && __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(Error());
-        var Scheduler = require_scheduler(), React4 = require_react(), ReactDOM2 = require_react_dom(), assign = Object.assign, REACT_LEGACY_ELEMENT_TYPE = /* @__PURE__ */ Symbol.for("react.element"), REACT_ELEMENT_TYPE = /* @__PURE__ */ Symbol.for("react.transitional.element"), REACT_PORTAL_TYPE = /* @__PURE__ */ Symbol.for("react.portal"), REACT_FRAGMENT_TYPE = /* @__PURE__ */ Symbol.for("react.fragment"), REACT_STRICT_MODE_TYPE = /* @__PURE__ */ Symbol.for("react.strict_mode"), REACT_PROFILER_TYPE = /* @__PURE__ */ Symbol.for("react.profiler"), REACT_CONSUMER_TYPE = /* @__PURE__ */ Symbol.for("react.consumer"), REACT_CONTEXT_TYPE = /* @__PURE__ */ Symbol.for("react.context"), REACT_FORWARD_REF_TYPE = /* @__PURE__ */ Symbol.for("react.forward_ref"), REACT_SUSPENSE_TYPE = /* @__PURE__ */ Symbol.for("react.suspense"), REACT_SUSPENSE_LIST_TYPE = /* @__PURE__ */ Symbol.for("react.suspense_list"), REACT_MEMO_TYPE = /* @__PURE__ */ Symbol.for("react.memo"), REACT_LAZY_TYPE = /* @__PURE__ */ Symbol.for("react.lazy");
+        var Scheduler = require_scheduler(), React11 = require_react(), ReactDOM2 = require_react_dom(), assign = Object.assign, REACT_LEGACY_ELEMENT_TYPE = /* @__PURE__ */ Symbol.for("react.element"), REACT_ELEMENT_TYPE = /* @__PURE__ */ Symbol.for("react.transitional.element"), REACT_PORTAL_TYPE = /* @__PURE__ */ Symbol.for("react.portal"), REACT_FRAGMENT_TYPE = /* @__PURE__ */ Symbol.for("react.fragment"), REACT_STRICT_MODE_TYPE = /* @__PURE__ */ Symbol.for("react.strict_mode"), REACT_PROFILER_TYPE = /* @__PURE__ */ Symbol.for("react.profiler"), REACT_CONSUMER_TYPE = /* @__PURE__ */ Symbol.for("react.consumer"), REACT_CONTEXT_TYPE = /* @__PURE__ */ Symbol.for("react.context"), REACT_FORWARD_REF_TYPE = /* @__PURE__ */ Symbol.for("react.forward_ref"), REACT_SUSPENSE_TYPE = /* @__PURE__ */ Symbol.for("react.suspense"), REACT_SUSPENSE_LIST_TYPE = /* @__PURE__ */ Symbol.for("react.suspense_list"), REACT_MEMO_TYPE = /* @__PURE__ */ Symbol.for("react.memo"), REACT_LAZY_TYPE = /* @__PURE__ */ Symbol.for("react.lazy");
         /* @__PURE__ */ Symbol.for("react.scope");
         var REACT_ACTIVITY_TYPE = /* @__PURE__ */ Symbol.for("react.activity");
         /* @__PURE__ */ Symbol.for("react.legacy_hidden");
         /* @__PURE__ */ Symbol.for("react.tracing_marker");
         var REACT_MEMO_CACHE_SENTINEL = /* @__PURE__ */ Symbol.for("react.memo_cache_sentinel");
         /* @__PURE__ */ Symbol.for("react.view_transition");
-        var MAYBE_ITERATOR_SYMBOL = Symbol.iterator, REACT_CLIENT_REFERENCE = /* @__PURE__ */ Symbol.for("react.client.reference"), isArrayImpl = Array.isArray, ReactSharedInternals = React4.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, ReactDOMSharedInternals = ReactDOM2.__DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, NotPending = Object.freeze({
+        var MAYBE_ITERATOR_SYMBOL = Symbol.iterator, REACT_CLIENT_REFERENCE = /* @__PURE__ */ Symbol.for("react.client.reference"), isArrayImpl = Array.isArray, ReactSharedInternals = React11.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, ReactDOMSharedInternals = ReactDOM2.__DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, NotPending = Object.freeze({
           pending: false,
           data: null,
           method: null,
@@ -21313,7 +21313,7 @@
           }
         };
         (function() {
-          var isomorphicReactPackageVersion = React4.version;
+          var isomorphicReactPackageVersion = React11.version;
           if ("19.2.3" !== isomorphicReactPackageVersion)
             throw Error(
               'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' + (isomorphicReactPackageVersion + "\n  - react-dom:  19.2.3\nLearn more: https://react.dev/warnings/version-mismatch")
@@ -21453,284 +21453,18 @@
     }
   });
 
-  // node_modules/react/cjs/react-jsx-runtime.development.js
-  var require_react_jsx_runtime_development = __commonJS({
-    "node_modules/react/cjs/react-jsx-runtime.development.js"(exports) {
-      "use strict";
-      (function() {
-        function getComponentNameFromType(type) {
-          if (null == type) return null;
-          if ("function" === typeof type)
-            return type.$$typeof === REACT_CLIENT_REFERENCE ? null : type.displayName || type.name || null;
-          if ("string" === typeof type) return type;
-          switch (type) {
-            case REACT_FRAGMENT_TYPE:
-              return "Fragment";
-            case REACT_PROFILER_TYPE:
-              return "Profiler";
-            case REACT_STRICT_MODE_TYPE:
-              return "StrictMode";
-            case REACT_SUSPENSE_TYPE:
-              return "Suspense";
-            case REACT_SUSPENSE_LIST_TYPE:
-              return "SuspenseList";
-            case REACT_ACTIVITY_TYPE:
-              return "Activity";
-          }
-          if ("object" === typeof type)
-            switch ("number" === typeof type.tag && console.error(
-              "Received an unexpected object in getComponentNameFromType(). This is likely a bug in React. Please file an issue."
-            ), type.$$typeof) {
-              case REACT_PORTAL_TYPE:
-                return "Portal";
-              case REACT_CONTEXT_TYPE:
-                return type.displayName || "Context";
-              case REACT_CONSUMER_TYPE:
-                return (type._context.displayName || "Context") + ".Consumer";
-              case REACT_FORWARD_REF_TYPE:
-                var innerType = type.render;
-                type = type.displayName;
-                type || (type = innerType.displayName || innerType.name || "", type = "" !== type ? "ForwardRef(" + type + ")" : "ForwardRef");
-                return type;
-              case REACT_MEMO_TYPE:
-                return innerType = type.displayName || null, null !== innerType ? innerType : getComponentNameFromType(type.type) || "Memo";
-              case REACT_LAZY_TYPE:
-                innerType = type._payload;
-                type = type._init;
-                try {
-                  return getComponentNameFromType(type(innerType));
-                } catch (x) {
-                }
-            }
-          return null;
-        }
-        function testStringCoercion(value2) {
-          return "" + value2;
-        }
-        function checkKeyStringCoercion(value2) {
-          try {
-            testStringCoercion(value2);
-            var JSCompiler_inline_result = false;
-          } catch (e) {
-            JSCompiler_inline_result = true;
-          }
-          if (JSCompiler_inline_result) {
-            JSCompiler_inline_result = console;
-            var JSCompiler_temp_const = JSCompiler_inline_result.error;
-            var JSCompiler_inline_result$jscomp$0 = "function" === typeof Symbol && Symbol.toStringTag && value2[Symbol.toStringTag] || value2.constructor.name || "Object";
-            JSCompiler_temp_const.call(
-              JSCompiler_inline_result,
-              "The provided key is an unsupported type %s. This value must be coerced to a string before using it here.",
-              JSCompiler_inline_result$jscomp$0
-            );
-            return testStringCoercion(value2);
-          }
-        }
-        function getTaskName(type) {
-          if (type === REACT_FRAGMENT_TYPE) return "<>";
-          if ("object" === typeof type && null !== type && type.$$typeof === REACT_LAZY_TYPE)
-            return "<...>";
-          try {
-            var name = getComponentNameFromType(type);
-            return name ? "<" + name + ">" : "<...>";
-          } catch (x) {
-            return "<...>";
-          }
-        }
-        function getOwner() {
-          var dispatcher = ReactSharedInternals.A;
-          return null === dispatcher ? null : dispatcher.getOwner();
-        }
-        function UnknownOwner() {
-          return Error("react-stack-top-frame");
-        }
-        function hasValidKey(config) {
-          if (hasOwnProperty.call(config, "key")) {
-            var getter = Object.getOwnPropertyDescriptor(config, "key").get;
-            if (getter && getter.isReactWarning) return false;
-          }
-          return void 0 !== config.key;
-        }
-        function defineKeyPropWarningGetter(props, displayName) {
-          function warnAboutAccessingKey() {
-            specialPropKeyWarningShown || (specialPropKeyWarningShown = true, console.error(
-              "%s: `key` is not a prop. Trying to access it will result in `undefined` being returned. If you need to access the same value within the child component, you should pass it as a different prop. (https://react.dev/link/special-props)",
-              displayName
-            ));
-          }
-          warnAboutAccessingKey.isReactWarning = true;
-          Object.defineProperty(props, "key", {
-            get: warnAboutAccessingKey,
-            configurable: true
-          });
-        }
-        function elementRefGetterWithDeprecationWarning() {
-          var componentName = getComponentNameFromType(this.type);
-          didWarnAboutElementRef[componentName] || (didWarnAboutElementRef[componentName] = true, console.error(
-            "Accessing element.ref was removed in React 19. ref is now a regular prop. It will be removed from the JSX Element type in a future release."
-          ));
-          componentName = this.props.ref;
-          return void 0 !== componentName ? componentName : null;
-        }
-        function ReactElement(type, key, props, owner, debugStack, debugTask) {
-          var refProp = props.ref;
-          type = {
-            $$typeof: REACT_ELEMENT_TYPE,
-            type,
-            key,
-            props,
-            _owner: owner
-          };
-          null !== (void 0 !== refProp ? refProp : null) ? Object.defineProperty(type, "ref", {
-            enumerable: false,
-            get: elementRefGetterWithDeprecationWarning
-          }) : Object.defineProperty(type, "ref", { enumerable: false, value: null });
-          type._store = {};
-          Object.defineProperty(type._store, "validated", {
-            configurable: false,
-            enumerable: false,
-            writable: true,
-            value: 0
-          });
-          Object.defineProperty(type, "_debugInfo", {
-            configurable: false,
-            enumerable: false,
-            writable: true,
-            value: null
-          });
-          Object.defineProperty(type, "_debugStack", {
-            configurable: false,
-            enumerable: false,
-            writable: true,
-            value: debugStack
-          });
-          Object.defineProperty(type, "_debugTask", {
-            configurable: false,
-            enumerable: false,
-            writable: true,
-            value: debugTask
-          });
-          Object.freeze && (Object.freeze(type.props), Object.freeze(type));
-          return type;
-        }
-        function jsxDEVImpl(type, config, maybeKey, isStaticChildren, debugStack, debugTask) {
-          var children = config.children;
-          if (void 0 !== children)
-            if (isStaticChildren)
-              if (isArrayImpl(children)) {
-                for (isStaticChildren = 0; isStaticChildren < children.length; isStaticChildren++)
-                  validateChildKeys(children[isStaticChildren]);
-                Object.freeze && Object.freeze(children);
-              } else
-                console.error(
-                  "React.jsx: Static children should always be an array. You are likely explicitly calling React.jsxs or React.jsxDEV. Use the Babel transform instead."
-                );
-            else validateChildKeys(children);
-          if (hasOwnProperty.call(config, "key")) {
-            children = getComponentNameFromType(type);
-            var keys = Object.keys(config).filter(function(k) {
-              return "key" !== k;
-            });
-            isStaticChildren = 0 < keys.length ? "{key: someKey, " + keys.join(": ..., ") + ": ...}" : "{key: someKey}";
-            didWarnAboutKeySpread[children + isStaticChildren] || (keys = 0 < keys.length ? "{" + keys.join(": ..., ") + ": ...}" : "{}", console.error(
-              'A props object containing a "key" prop is being spread into JSX:\n  let props = %s;\n  <%s {...props} />\nReact keys must be passed directly to JSX without using spread:\n  let props = %s;\n  <%s key={someKey} {...props} />',
-              isStaticChildren,
-              children,
-              keys,
-              children
-            ), didWarnAboutKeySpread[children + isStaticChildren] = true);
-          }
-          children = null;
-          void 0 !== maybeKey && (checkKeyStringCoercion(maybeKey), children = "" + maybeKey);
-          hasValidKey(config) && (checkKeyStringCoercion(config.key), children = "" + config.key);
-          if ("key" in config) {
-            maybeKey = {};
-            for (var propName in config)
-              "key" !== propName && (maybeKey[propName] = config[propName]);
-          } else maybeKey = config;
-          children && defineKeyPropWarningGetter(
-            maybeKey,
-            "function" === typeof type ? type.displayName || type.name || "Unknown" : type
-          );
-          return ReactElement(
-            type,
-            children,
-            maybeKey,
-            getOwner(),
-            debugStack,
-            debugTask
-          );
-        }
-        function validateChildKeys(node) {
-          isValidElement(node) ? node._store && (node._store.validated = 1) : "object" === typeof node && null !== node && node.$$typeof === REACT_LAZY_TYPE && ("fulfilled" === node._payload.status ? isValidElement(node._payload.value) && node._payload.value._store && (node._payload.value._store.validated = 1) : node._store && (node._store.validated = 1));
-        }
-        function isValidElement(object) {
-          return "object" === typeof object && null !== object && object.$$typeof === REACT_ELEMENT_TYPE;
-        }
-        var React4 = require_react(), REACT_ELEMENT_TYPE = /* @__PURE__ */ Symbol.for("react.transitional.element"), REACT_PORTAL_TYPE = /* @__PURE__ */ Symbol.for("react.portal"), REACT_FRAGMENT_TYPE = /* @__PURE__ */ Symbol.for("react.fragment"), REACT_STRICT_MODE_TYPE = /* @__PURE__ */ Symbol.for("react.strict_mode"), REACT_PROFILER_TYPE = /* @__PURE__ */ Symbol.for("react.profiler"), REACT_CONSUMER_TYPE = /* @__PURE__ */ Symbol.for("react.consumer"), REACT_CONTEXT_TYPE = /* @__PURE__ */ Symbol.for("react.context"), REACT_FORWARD_REF_TYPE = /* @__PURE__ */ Symbol.for("react.forward_ref"), REACT_SUSPENSE_TYPE = /* @__PURE__ */ Symbol.for("react.suspense"), REACT_SUSPENSE_LIST_TYPE = /* @__PURE__ */ Symbol.for("react.suspense_list"), REACT_MEMO_TYPE = /* @__PURE__ */ Symbol.for("react.memo"), REACT_LAZY_TYPE = /* @__PURE__ */ Symbol.for("react.lazy"), REACT_ACTIVITY_TYPE = /* @__PURE__ */ Symbol.for("react.activity"), REACT_CLIENT_REFERENCE = /* @__PURE__ */ Symbol.for("react.client.reference"), ReactSharedInternals = React4.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, hasOwnProperty = Object.prototype.hasOwnProperty, isArrayImpl = Array.isArray, createTask = console.createTask ? console.createTask : function() {
-          return null;
-        };
-        React4 = {
-          react_stack_bottom_frame: function(callStackForError) {
-            return callStackForError();
-          }
-        };
-        var specialPropKeyWarningShown;
-        var didWarnAboutElementRef = {};
-        var unknownOwnerDebugStack = React4.react_stack_bottom_frame.bind(
-          React4,
-          UnknownOwner
-        )();
-        var unknownOwnerDebugTask = createTask(getTaskName(UnknownOwner));
-        var didWarnAboutKeySpread = {};
-        exports.Fragment = REACT_FRAGMENT_TYPE;
-        exports.jsx = function(type, config, maybeKey) {
-          var trackActualOwner = 1e4 > ReactSharedInternals.recentlyCreatedOwnerStacks++;
-          return jsxDEVImpl(
-            type,
-            config,
-            maybeKey,
-            false,
-            trackActualOwner ? Error("react-stack-top-frame") : unknownOwnerDebugStack,
-            trackActualOwner ? createTask(getTaskName(type)) : unknownOwnerDebugTask
-          );
-        };
-        exports.jsxs = function(type, config, maybeKey) {
-          var trackActualOwner = 1e4 > ReactSharedInternals.recentlyCreatedOwnerStacks++;
-          return jsxDEVImpl(
-            type,
-            config,
-            maybeKey,
-            true,
-            trackActualOwner ? Error("react-stack-top-frame") : unknownOwnerDebugStack,
-            trackActualOwner ? createTask(getTaskName(type)) : unknownOwnerDebugTask
-          );
-        };
-      })();
-    }
-  });
-
-  // node_modules/react/jsx-runtime.js
-  var require_jsx_runtime = __commonJS({
-    "node_modules/react/jsx-runtime.js"(exports, module) {
-      "use strict";
-      if (false) {
-        module.exports = null;
-      } else {
-        module.exports = require_react_jsx_runtime_development();
-      }
-    }
-  });
-
   // public/src/index.tsx
-  var import_react3 = __toESM(require_react());
+  var import_react10 = __toESM(require_react());
   var import_client = __toESM(require_client());
 
   // public/src/App.tsx
+  var import_react9 = __toESM(require_react());
+
+  // public/src/components/StatusPanel.tsx
   var import_react2 = __toESM(require_react());
 
   // public/src/components/ProgressBar.tsx
-  var import_jsx_runtime = __toESM(require_jsx_runtime());
+  var import_react = __toESM(require_react());
   var ProgressBar = ({ value: value2, max, colorMap }) => {
     const percentage = value2 / max * 100;
     let barColor = colorMap.high;
@@ -21739,111 +21473,46 @@
     } else if (percentage < 60) {
       barColor = colorMap.med;
     }
-    return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "w-full bg-slate-800 rounded-full h-2 overflow-hidden shadow-inner", children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+    return /* @__PURE__ */ import_react.default.createElement("div", { className: "w-full bg-slate-800 rounded-full h-2 overflow-hidden shadow-inner" }, /* @__PURE__ */ import_react.default.createElement(
       "div",
       {
         className: `h-full transition-all duration-500 ease-out ${barColor}`,
         style: { width: `${percentage}%` }
       }
-    ) });
+    ));
   };
   var ProgressBar_default = ProgressBar;
 
   // public/src/components/StatusPanel.tsx
-  var import_jsx_runtime2 = __toESM(require_jsx_runtime());
   var StatusPanel = ({ botState }) => {
     const { coordinates } = botState;
-    return /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-xl flex flex-col h-full border-l-4 border-l-cyan-500", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("h2", { className: "text-2xl font-extrabold mb-8 flex items-center gap-3 text-slate-100", children: "Status Panel" }),
-      /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "space-y-6 overflow-y-auto pr-2", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "flex justify-between items-center group", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("span", { className: "text-slate-400 font-medium", children: "Status:" }),
-          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("span", { className: `font-black text-lg tracking-tight ${botState.isOnline ? "text-cyan-400" : "text-red-500"}`, children: botState.isOnline ? "Online" : "Offline" })
-        ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "flex justify-between items-center", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("span", { className: "text-slate-400 font-medium", children: "Uptime:" }),
-          /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("span", { className: "font-bold text-slate-100 font-mono", children: [
-            botState.uptime,
-            "s"
-          ] })
-        ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "space-y-2", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "flex justify-between items-center", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("span", { className: "text-slate-400 font-medium", children: "Health:" }),
-            /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("span", { className: "font-bold text-slate-100 font-mono", children: [
-              botState.health,
-              "/20"
-            ] })
-          ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(
-            ProgressBar_default,
-            {
-              value: botState.health,
-              max: 20,
-              colorMap: { low: "bg-red-500", med: "bg-yellow-500", high: "bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.4)]" }
-            }
-          )
-        ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "space-y-2", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "flex justify-between items-center", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("span", { className: "text-slate-400 font-medium", children: "Hunger:" }),
-            /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("span", { className: "font-bold text-slate-100 font-mono", children: [
-              botState.hunger,
-              "/20"
-            ] })
-          ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(
-            ProgressBar_default,
-            {
-              value: botState.hunger,
-              max: 20,
-              colorMap: { low: "bg-red-500", med: "bg-yellow-500", high: "bg-orange-500 shadow-[0_0_10px_rgba(249,115,22,0.4)]" }
-            }
-          )
-        ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "flex justify-between items-center", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("span", { className: "text-slate-400 font-medium", children: "Coords:" }),
-          /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("span", { className: "font-bold text-slate-100 font-mono text-sm tracking-tight bg-slate-800 px-2 py-1 rounded", children: [
-            "X:",
-            coordinates.x.toFixed(0),
-            " Y:",
-            coordinates.y.toFixed(0),
-            " Z:",
-            coordinates.z.toFixed(0)
-          ] })
-        ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "flex justify-between items-center", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("span", { className: "text-slate-400 font-medium", children: "Players:" }),
-          /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "flex items-center gap-2", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("span", { className: "font-black text-cyan-400 text-lg", children: botState.playerCount }),
-            /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "flex -space-x-2", children: [
-              botState.playerList.slice(0, 3).map((_, i) => /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("div", { className: "w-5 h-5 rounded-full bg-slate-700 border border-slate-900 flex items-center justify-center text-[8px] font-bold text-slate-400", children: botState.playerList[i]?.charAt(0) || "?" }, i)),
-              botState.playerCount > 3 && /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "w-5 h-5 rounded-full bg-slate-800 border border-slate-900 flex items-center justify-center text-[8px] text-slate-500", children: [
-                "+",
-                botState.playerCount - 3
-              ] })
-            ] })
-          ] })
-        ] }),
-        botState.proxy && /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "mt-4 pt-4 border-t border-slate-800/50 flex justify-between items-center opacity-50 text-[10px] uppercase tracking-widest font-bold", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("span", { className: "text-slate-500", children: "Network Proxy" }),
-          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("span", { className: "text-cyan-600", children: botState.proxy })
-        ] })
-      ] })
-    ] });
+    return /* @__PURE__ */ import_react2.default.createElement("div", { className: "bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-xl flex flex-col h-full border-l-4 border-l-cyan-500" }, /* @__PURE__ */ import_react2.default.createElement("h2", { className: "text-2xl font-extrabold mb-8 flex items-center gap-3 text-slate-100" }, "Status Panel"), /* @__PURE__ */ import_react2.default.createElement("div", { className: "space-y-6 overflow-y-auto pr-2" }, /* @__PURE__ */ import_react2.default.createElement("div", { className: "flex justify-between items-center group" }, /* @__PURE__ */ import_react2.default.createElement("span", { className: "text-slate-400 font-medium" }, "Status:"), /* @__PURE__ */ import_react2.default.createElement("span", { className: `font-black text-lg tracking-tight ${botState.isOnline ? "text-cyan-400" : "text-red-500"}` }, botState.isOnline ? "Online" : "Offline")), /* @__PURE__ */ import_react2.default.createElement("div", { className: "flex justify-between items-center" }, /* @__PURE__ */ import_react2.default.createElement("span", { className: "text-slate-400 font-medium" }, "Uptime:"), /* @__PURE__ */ import_react2.default.createElement("span", { className: "font-bold text-slate-100 font-mono" }, botState.uptime, "s")), /* @__PURE__ */ import_react2.default.createElement("div", { className: "space-y-2" }, /* @__PURE__ */ import_react2.default.createElement("div", { className: "flex justify-between items-center" }, /* @__PURE__ */ import_react2.default.createElement("span", { className: "text-slate-400 font-medium" }, "Health:"), /* @__PURE__ */ import_react2.default.createElement("span", { className: "font-bold text-slate-100 font-mono" }, botState.health, "/20")), /* @__PURE__ */ import_react2.default.createElement(
+      ProgressBar_default,
+      {
+        value: botState.health,
+        max: 20,
+        colorMap: { low: "bg-red-500", med: "bg-yellow-500", high: "bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.4)]" }
+      }
+    )), /* @__PURE__ */ import_react2.default.createElement("div", { className: "space-y-2" }, /* @__PURE__ */ import_react2.default.createElement("div", { className: "flex justify-between items-center" }, /* @__PURE__ */ import_react2.default.createElement("span", { className: "text-slate-400 font-medium" }, "Hunger:"), /* @__PURE__ */ import_react2.default.createElement("span", { className: "font-bold text-slate-100 font-mono" }, botState.hunger, "/20")), /* @__PURE__ */ import_react2.default.createElement(
+      ProgressBar_default,
+      {
+        value: botState.hunger,
+        max: 20,
+        colorMap: { low: "bg-red-500", med: "bg-yellow-500", high: "bg-orange-500 shadow-[0_0_10px_rgba(249,115,22,0.4)]" }
+      }
+    )), /* @__PURE__ */ import_react2.default.createElement("div", { className: "flex justify-between items-center" }, /* @__PURE__ */ import_react2.default.createElement("span", { className: "text-slate-400 font-medium" }, "Coords:"), /* @__PURE__ */ import_react2.default.createElement("span", { className: "font-bold text-slate-100 font-mono text-sm tracking-tight bg-slate-800 px-2 py-1 rounded" }, "X:", coordinates.x.toFixed(0), " Y:", coordinates.y.toFixed(0), " Z:", coordinates.z.toFixed(0))), /* @__PURE__ */ import_react2.default.createElement("div", { className: "flex justify-between items-center" }, /* @__PURE__ */ import_react2.default.createElement("span", { className: "text-slate-400 font-medium" }, "Players:"), /* @__PURE__ */ import_react2.default.createElement("div", { className: "flex items-center gap-2" }, /* @__PURE__ */ import_react2.default.createElement("span", { className: "font-black text-cyan-400 text-lg" }, botState.playerCount), /* @__PURE__ */ import_react2.default.createElement("div", { className: "flex -space-x-2" }, botState.playerList.slice(0, 3).map((_, i) => /* @__PURE__ */ import_react2.default.createElement("div", { key: i, className: "w-5 h-5 rounded-full bg-slate-700 border border-slate-900 flex items-center justify-center text-[8px] font-bold text-slate-400" }, botState.playerList[i]?.charAt(0) || "?")), botState.playerCount > 3 && /* @__PURE__ */ import_react2.default.createElement("div", { className: "w-5 h-5 rounded-full bg-slate-800 border border-slate-900 flex items-center justify-center text-[8px] text-slate-500" }, "+", botState.playerCount - 3)))), botState.proxy && /* @__PURE__ */ import_react2.default.createElement("div", { className: "mt-4 pt-4 border-t border-slate-800/50 flex justify-between items-center opacity-50 text-[10px] uppercase tracking-widest font-bold" }, /* @__PURE__ */ import_react2.default.createElement("span", { className: "text-slate-500" }, "Network Proxy"), /* @__PURE__ */ import_react2.default.createElement("span", { className: "text-cyan-600" }, botState.proxy))));
   };
   var StatusPanel_default = StatusPanel;
 
   // public/src/components/ChatPanel.tsx
-  var import_react = __toESM(require_react());
-  var import_jsx_runtime3 = __toESM(require_jsx_runtime());
+  var import_react3 = __toESM(require_react());
   var ChatPanel = ({ messages, onSendMessage }) => {
-    const [input, setInput] = (0, import_react.useState)("");
-    const chatEndRef = (0, import_react.useRef)(null);
+    const [input, setInput] = (0, import_react3.useState)("");
+    const chatEndRef = (0, import_react3.useRef)(null);
     const scrollToBottom = () => {
       chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
     };
-    (0, import_react.useEffect)(() => {
+    (0, import_react3.useEffect)(() => {
       scrollToBottom();
     }, [messages]);
     const handleSubmit = (e) => {
@@ -21858,171 +21527,72 @@
       if (userMatch) {
         const username = userMatch[1];
         const rest = text.substring(userMatch[0].length);
-        return /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)(import_jsx_runtime3.Fragment, { children: [
-          /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("span", { className: "text-cyan-400 font-bold", children: [
-            "<",
-            username,
-            ">"
-          ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("span", { className: "text-slate-200", children: rest })
-        ] });
+        return /* @__PURE__ */ import_react3.default.createElement(import_react3.default.Fragment, null, /* @__PURE__ */ import_react3.default.createElement("span", { className: "text-cyan-400 font-bold" }, "<", username, ">"), /* @__PURE__ */ import_react3.default.createElement("span", { className: "text-slate-200" }, rest));
       }
-      return /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("span", { className: "text-slate-200", children: text });
+      return /* @__PURE__ */ import_react3.default.createElement("span", { className: "text-slate-200" }, text);
     };
-    return /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { className: "bg-slate-900 border border-slate-800 rounded-xl flex flex-col h-[500px] lg:h-[600px] shadow-xl overflow-hidden", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { className: "p-4 border-b border-slate-800 flex items-center gap-2", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("span", { className: "w-2 h-2 rounded-full bg-purple-500 shadow-[0_0_10px_rgba(138,43,226,0.8)]" }),
-        /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("h2", { className: "text-xl font-bold", children: "Live Chat" })
-      ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { className: "flex-1 overflow-y-auto p-4 space-y-2 font-mono text-sm bg-slate-950/50", children: [
-        messages.map((msg) => /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { className: `flex gap-2 ${msg.isSystem ? "italic text-slate-400" : ""}`, children: [
-          /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("span", { className: "text-slate-600 shrink-0", children: [
-            "[",
-            new Date(msg.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }),
-            "]"
-          ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("div", { children: formatMessage(msg.text) })
-        ] }, msg.id)),
-        /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("div", { ref: chatEndRef })
-      ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("form", { onSubmit: handleSubmit, className: "p-4 bg-slate-900 border-t border-slate-800 flex gap-2", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(
-          "input",
-          {
-            type: "text",
-            value: input,
-            onChange: (e) => setInput(e.target.value),
-            placeholder: "Send a message...",
-            className: "flex-1 bg-slate-950 border border-slate-700 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all placeholder:text-slate-600"
-          }
-        ),
-        /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(
-          "button",
-          {
-            type: "submit",
-            className: "bg-purple-600 hover:bg-purple-500 text-white font-semibold px-4 py-2 rounded-lg text-sm transition-colors shadow-[0_0_15px_rgba(138,43,226,0.3)]",
-            children: "Send"
-          }
-        )
-      ] })
-    ] });
+    return /* @__PURE__ */ import_react3.default.createElement("div", { className: "bg-slate-900 border border-slate-800 rounded-xl flex flex-col h-[500px] lg:h-[600px] shadow-xl overflow-hidden" }, /* @__PURE__ */ import_react3.default.createElement("div", { className: "p-4 border-b border-slate-800 flex items-center gap-2" }, /* @__PURE__ */ import_react3.default.createElement("span", { className: "w-2 h-2 rounded-full bg-purple-500 shadow-[0_0_10px_rgba(138,43,226,0.8)]" }), /* @__PURE__ */ import_react3.default.createElement("h2", { className: "text-xl font-bold" }, "Live Chat")), /* @__PURE__ */ import_react3.default.createElement("div", { className: "flex-1 overflow-y-auto p-4 space-y-2 font-mono text-sm bg-slate-950/50" }, messages.map((msg) => /* @__PURE__ */ import_react3.default.createElement("div", { key: msg.id, className: `flex gap-2 ${msg.isSystem ? "italic text-slate-400" : ""}` }, /* @__PURE__ */ import_react3.default.createElement("span", { className: "text-slate-600 shrink-0" }, "[", new Date(msg.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }), "]"), /* @__PURE__ */ import_react3.default.createElement("div", null, formatMessage(msg.text)))), /* @__PURE__ */ import_react3.default.createElement("div", { ref: chatEndRef })), /* @__PURE__ */ import_react3.default.createElement("form", { onSubmit: handleSubmit, className: "p-4 bg-slate-900 border-t border-slate-800 flex gap-2" }, /* @__PURE__ */ import_react3.default.createElement(
+      "input",
+      {
+        type: "text",
+        value: input,
+        onChange: (e) => setInput(e.target.value),
+        placeholder: "Send a message...",
+        className: "flex-1 bg-slate-950 border border-slate-700 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all placeholder:text-slate-600"
+      }
+    ), /* @__PURE__ */ import_react3.default.createElement(
+      "button",
+      {
+        type: "submit",
+        className: "bg-purple-600 hover:bg-purple-500 text-white font-semibold px-4 py-2 rounded-lg text-sm transition-colors shadow-[0_0_15px_rgba(138,43,226,0.3)]"
+      },
+      "Send"
+    )));
   };
   var ChatPanel_default = ChatPanel;
 
   // public/src/components/PlayerPanel.tsx
-  var import_jsx_runtime4 = __toESM(require_jsx_runtime());
+  var import_react4 = __toESM(require_react());
   var PlayerPanel = ({ botState }) => {
-    return /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("div", { className: "bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-xl flex flex-col h-full", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("h2", { className: "text-xl font-bold mb-6 flex items-center gap-2 text-cyan-400", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("svg", { xmlns: "http://www.w3.org/2000/svg", className: "h-5 w-5", viewBox: "0 0 20 20", fill: "currentColor", children: /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("path", { d: "M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" }) }),
-        "Server Players"
-      ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("div", { className: "flex justify-between items-center mb-4", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("h3", { className: "text-sm font-semibold text-slate-400 uppercase tracking-wider", children: "Currently Online" }),
-        /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("span", { className: "px-2 py-0.5 bg-slate-800 text-cyan-400 text-xs rounded-full font-bold", children: botState.playerCount })
-      ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("div", { className: "flex-1 bg-slate-950/50 rounded-lg border border-slate-800 p-3 overflow-y-auto", children: botState.playerList.length > 0 ? /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("ul", { className: "space-y-2", children: botState.playerList.map((player, idx) => /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("li", { className: "flex items-center justify-between p-2 rounded hover:bg-slate-900/50 group transition-colors", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("div", { className: "flex items-center gap-3", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("div", { className: "w-8 h-8 rounded bg-slate-800 flex items-center justify-center text-xs font-bold text-slate-400 group-hover:text-cyan-400 transition-colors", children: player.charAt(0) }),
-          /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("span", { className: "text-sm text-slate-200", children: player })
-        ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("span", { className: "w-2 h-2 rounded-full bg-green-500 shadow-[0_0_5px_rgba(34,197,94,0.5)]" })
-      ] }, idx)) }) : /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("div", { className: "h-full flex flex-col items-center justify-center text-slate-600 py-8", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("svg", { xmlns: "http://www.w3.org/2000/svg", className: "h-10 w-10 mb-2 opacity-20", fill: "none", viewBox: "0 0 24 24", stroke: "currentColor", children: /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("path", { strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: 2, d: "M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" }) }),
-        /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("p", { className: "text-sm italic", children: "No players detected" })
-      ] }) })
-    ] });
+    return /* @__PURE__ */ import_react4.default.createElement("div", { className: "bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-xl flex flex-col h-full" }, /* @__PURE__ */ import_react4.default.createElement("h2", { className: "text-xl font-bold mb-6 flex items-center gap-2 text-cyan-400" }, /* @__PURE__ */ import_react4.default.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", className: "h-5 w-5", viewBox: "0 0 20 20", fill: "currentColor" }, /* @__PURE__ */ import_react4.default.createElement("path", { d: "M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" })), "Server Players"), /* @__PURE__ */ import_react4.default.createElement("div", { className: "flex justify-between items-center mb-4" }, /* @__PURE__ */ import_react4.default.createElement("h3", { className: "text-sm font-semibold text-slate-400 uppercase tracking-wider" }, "Currently Online"), /* @__PURE__ */ import_react4.default.createElement("span", { className: "px-2 py-0.5 bg-slate-800 text-cyan-400 text-xs rounded-full font-bold" }, botState.playerCount)), /* @__PURE__ */ import_react4.default.createElement("div", { className: "flex-1 bg-slate-950/50 rounded-lg border border-slate-800 p-3 overflow-y-auto" }, botState.playerList.length > 0 ? /* @__PURE__ */ import_react4.default.createElement("ul", { className: "space-y-2" }, botState.playerList.map((player, idx) => /* @__PURE__ */ import_react4.default.createElement("li", { key: idx, className: "flex items-center justify-between p-2 rounded hover:bg-slate-900/50 group transition-colors" }, /* @__PURE__ */ import_react4.default.createElement("div", { className: "flex items-center gap-3" }, /* @__PURE__ */ import_react4.default.createElement("div", { className: "w-8 h-8 rounded bg-slate-800 flex items-center justify-center text-xs font-bold text-slate-400 group-hover:text-cyan-400 transition-colors" }, player.charAt(0)), /* @__PURE__ */ import_react4.default.createElement("span", { className: "text-sm text-slate-200" }, player)), /* @__PURE__ */ import_react4.default.createElement("span", { className: "w-2 h-2 rounded-full bg-green-500 shadow-[0_0_5px_rgba(34,197,94,0.5)]" })))) : /* @__PURE__ */ import_react4.default.createElement("div", { className: "h-full flex flex-col items-center justify-center text-slate-600 py-8" }, /* @__PURE__ */ import_react4.default.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", className: "h-10 w-10 mb-2 opacity-20", fill: "none", viewBox: "0 0 24 24", stroke: "currentColor" }, /* @__PURE__ */ import_react4.default.createElement("path", { strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: 2, d: "M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" })), /* @__PURE__ */ import_react4.default.createElement("p", { className: "text-sm italic" }, "No players detected"))));
   };
   var PlayerPanel_default = PlayerPanel;
 
   // public/src/components/AdminPanel.tsx
-  var import_jsx_runtime5 = __toESM(require_jsx_runtime());
-  var AdminPanel = ({
-    botState,
-    onToggleAfk,
-    onValidateProxies,
-    isValidating,
-    validationMsg,
-    onAction
-  }) => {
-    return /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)("div", { className: "bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-xl flex flex-col h-full", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)("h2", { className: "text-xl font-bold mb-6 flex items-center gap-2 text-purple-400", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("svg", { xmlns: "http://www.w3.org/2000/svg", className: "h-5 w-5", viewBox: "0 0 20 20", fill: "currentColor", children: /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("path", { fillRule: "evenodd", d: "M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z", clipRule: "evenodd" }) }),
-        "Admin Console"
-      ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)("div", { className: "grid grid-cols-1 gap-3 overflow-y-auto", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)("div", { className: "space-y-3", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("h3", { className: "text-xs font-semibold text-slate-500 uppercase tracking-widest mb-2", children: "Bot Management" }),
-          /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
-            AdminButton,
-            {
-              onClick: onToggleAfk,
-              label: botState.isAfkEnabled ? "Disable Anti-AFK" : "Enable Anti-AFK",
-              variant: botState.isAfkEnabled ? "danger" : "primary"
-            }
-          ),
-          /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
-            AdminButton,
-            {
-              onClick: () => onAction("Reconnect Bot"),
-              label: "Reconnect Bot",
-              variant: "secondary"
-            }
-          ),
-          /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
-            AdminButton,
-            {
-              onClick: () => onAction("Force Respawn"),
-              label: "Force Respawn",
-              variant: "secondary"
-            }
-          )
-        ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)("div", { className: "space-y-3 mt-4", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("h3", { className: "text-xs font-semibold text-slate-500 uppercase tracking-widest mb-2", children: "Network & Data" }),
-          /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
-            AdminButton,
-            {
-              onClick: onValidateProxies,
-              label: isValidating ? "Validating..." : "Validate Proxies",
-              disabled: isValidating,
-              variant: "primary"
-            }
-          ),
-          /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
-            AdminButton,
-            {
-              onClick: () => onAction("Clear Local Chat"),
-              label: "Clear Chat Log",
-              variant: "secondary"
-            }
-          )
-        ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)("div", { className: "space-y-3 mt-4", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("h3", { className: "text-xs font-semibold text-slate-500 uppercase tracking-widest mb-2", children: "Inventory Control" }),
-          /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
-            AdminButton,
-            {
-              onClick: () => onAction("Drop Inventory"),
-              label: "Drop All Items",
-              variant: "danger"
-            }
-          )
-        ] }),
-        validationMsg && /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("div", { className: "mt-4 p-3 rounded-lg bg-green-500/10 border border-green-500/50 text-green-400 text-xs font-medium animate-pulse text-center", children: validationMsg })
-      ] })
-    ] });
-  };
-  var AdminButton = ({ onClick, label, variant, disabled }) => {
-    const baseStyles = "w-full py-2.5 rounded-lg font-bold text-xs transition-all shadow-lg active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed";
-    const variants = {
-      primary: "bg-purple-600 hover:bg-purple-500 text-white shadow-purple-900/20",
-      secondary: "bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700",
-      danger: "bg-red-600 hover:bg-red-500 text-white shadow-red-900/20"
-    };
-    return /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("button", { onClick, disabled, className: `${baseStyles} ${variants[variant]}`, children: label });
+  var import_react5 = __toESM(require_react());
+  var AdminPanel = ({ botState, onToggleAfk, onValidateProxies, isValidating, validationMsg, onAction }) => {
+    const actions = ["Use Held Item", "Look at Nearest Player", "Reconnect Bot", "Clear Local Chat"];
+    return /* @__PURE__ */ import_react5.default.createElement("div", { className: "bg-slate-900 border border-slate-700 rounded-lg p-4 h-full flex flex-col" }, /* @__PURE__ */ import_react5.default.createElement("h2", { className: "text-sm font-bold uppercase tracking-wider text-slate-400 mb-3" }, "Admin Controls"), /* @__PURE__ */ import_react5.default.createElement("div", { className: "flex flex-col space-y-2" }, /* @__PURE__ */ import_react5.default.createElement("button", { onClick: onToggleAfk, className: `p-2 rounded text-white font-bold ${botState.isAfkEnabled ? "bg-green-600 hover:bg-green-700" : "bg-red-600 hover:bg-red-700"}` }, "Anti-AFK: ", botState.isAfkEnabled ? "ON" : "OFF"), actions.map((action) => /* @__PURE__ */ import_react5.default.createElement("button", { key: action, onClick: () => onAction(action), className: "bg-slate-700 hover:bg-slate-600 p-2 rounded text-white font-bold" }, action)), /* @__PURE__ */ import_react5.default.createElement("button", { onClick: onValidateProxies, disabled: isValidating, className: "bg-blue-600 hover:bg-blue-700 p-2 rounded text-white font-bold disabled:bg-slate-500" }, isValidating ? "Validating..." : "Validate Proxies"), validationMsg && /* @__PURE__ */ import_react5.default.createElement("p", { className: "text-xs text-center text-green-400" }, validationMsg)));
   };
   var AdminPanel_default = AdminPanel;
+
+  // public/src/components/MinimapPanel.tsx
+  var import_react6 = __toESM(require_react());
+  var MinimapPanel = ({ minimap }) => {
+    return /* @__PURE__ */ import_react6.default.createElement("div", { className: "bg-slate-900 border border-slate-700 rounded-lg p-4 h-full flex flex-col" }, /* @__PURE__ */ import_react6.default.createElement("h2", { className: "text-sm font-bold uppercase tracking-wider text-slate-400 mb-3" }, "Minimap"), /* @__PURE__ */ import_react6.default.createElement("div", { className: "flex-grow flex items-center justify-center" }, /* @__PURE__ */ import_react6.default.createElement("div", { className: "grid grid-cols-5 gap-1" }, minimap.flat().map((color, index) => /* @__PURE__ */ import_react6.default.createElement(
+      "div",
+      {
+        key: index,
+        className: "w-8 h-8 rounded",
+        style: { backgroundColor: color }
+      }
+    )))));
+  };
+  var MinimapPanel_default = MinimapPanel;
+
+  // public/src/components/InventoryPanel.tsx
+  var import_react7 = __toESM(require_react());
+  var InventoryPanel = ({ inventory }) => {
+    return /* @__PURE__ */ import_react7.default.createElement("div", { className: "bg-slate-900 border border-slate-700 rounded-lg p-4 h-full flex flex-col" }, /* @__PURE__ */ import_react7.default.createElement("h2", { className: "text-sm font-bold uppercase tracking-wider text-slate-400 mb-3" }, "Inventory"), /* @__PURE__ */ import_react7.default.createElement("div", { className: "overflow-y-auto flex-grow" }, inventory.length === 0 ? /* @__PURE__ */ import_react7.default.createElement("p", { className: "text-slate-500 text-center mt-4" }, "Inventory is empty.") : /* @__PURE__ */ import_react7.default.createElement("ul", { className: "space-y-2" }, inventory.map((item, index) => /* @__PURE__ */ import_react7.default.createElement("li", { key: index, className: "flex justify-between items-center bg-slate-800 p-2 rounded" }, /* @__PURE__ */ import_react7.default.createElement("span", { className: "font-mono text-sm" }, item.name), /* @__PURE__ */ import_react7.default.createElement("span", { className: "font-bold text-xs bg-slate-700 px-2 py-1 rounded" }, item.count))))));
+  };
+  var InventoryPanel_default = InventoryPanel;
+
+  // public/src/components/MovementPanel.tsx
+  var import_react8 = __toESM(require_react());
+  var MovementPanel = ({ onMove, onStop }) => {
+    return /* @__PURE__ */ import_react8.default.createElement("div", { className: "bg-slate-900 border border-slate-700 rounded-lg p-4 h-full flex flex-col items-center justify-center" }, /* @__PURE__ */ import_react8.default.createElement("h2", { className: "text-sm font-bold uppercase tracking-wider text-slate-400 mb-3" }, "Movement"), /* @__PURE__ */ import_react8.default.createElement("div", { className: "grid grid-cols-3 gap-2" }, /* @__PURE__ */ import_react8.default.createElement("div", null), /* @__PURE__ */ import_react8.default.createElement("button", { onClick: () => onMove("forward"), className: "bg-slate-700 hover:bg-slate-600 p-4 rounded" }, "\u2B06\uFE0F"), /* @__PURE__ */ import_react8.default.createElement("div", null), /* @__PURE__ */ import_react8.default.createElement("button", { onClick: () => onMove("left"), className: "bg-slate-700 hover:bg-slate-600 p-4 rounded" }, "\u2B05\uFE0F"), /* @__PURE__ */ import_react8.default.createElement("button", { onClick: onStop, className: "bg-red-700 hover:bg-red-600 p-4 rounded" }, "\u{1F6D1}"), /* @__PURE__ */ import_react8.default.createElement("button", { onClick: () => onMove("right"), className: "bg-slate-700 hover:bg-slate-600 p-4 rounded" }, "\u27A1\uFE0F"), /* @__PURE__ */ import_react8.default.createElement("div", null), /* @__PURE__ */ import_react8.default.createElement("button", { onClick: () => onMove("backward"), className: "bg-slate-700 hover:bg-slate-600 p-4 rounded" }, "\u2B07\uFE0F"), /* @__PURE__ */ import_react8.default.createElement("div", null)));
+  };
+  var MovementPanel_default = MovementPanel;
 
   // node_modules/engine.io-parser/build/esm/commons.js
   var PACKET_TYPES = /* @__PURE__ */ Object.create(null);
@@ -25429,6 +24999,12 @@
   var onValidationResult = (callback) => {
     socket.on("validation-result", callback);
   };
+  var onInventoryUpdate = (callback) => {
+    socket.on("inventory-update", callback);
+  };
+  var onMinimapUpdate = (callback) => {
+    socket.on("minimap-update", callback);
+  };
   var emitSendMessage = (message) => {
     socket.emit("chat-message", message);
   };
@@ -25441,17 +25017,28 @@
   var emitReconnect = () => {
     socket.emit("reconnect-bot");
   };
-  var emitRespawn = () => {
-    socket.emit("force-respawn");
+  var emitUseItem = () => {
+    socket.emit("use-item");
   };
-  var emitDropInventory = () => {
-    socket.emit("drop-inventory");
+  var emitLookAtPlayer = () => {
+    socket.emit("look-at-player");
+  };
+  var emitGetInventory = () => {
+    socket.emit("get-inventory");
+  };
+  var emitGetMinimap = () => {
+    socket.emit("get-minimap");
+  };
+  var emitMove = (direction) => {
+    socket.emit("move", direction);
+  };
+  var emitStopMove = () => {
+    socket.emit("stop-move");
   };
 
   // public/src/App.tsx
-  var import_jsx_runtime6 = __toESM(require_jsx_runtime());
   var App = () => {
-    const [botState, setBotState] = (0, import_react2.useState)({
+    const [botState, setBotState] = (0, import_react9.useState)({
       isOnline: false,
       serverAddress: "Connecting...",
       uptime: 0,
@@ -25463,13 +25050,13 @@
       playerList: [],
       isAfkEnabled: true
     });
-    const [chatMessages, setChatMessages] = (0, import_react2.useState)([]);
-    const [isValidating, setIsValidating] = (0, import_react2.useState)(false);
-    const [validationMsg, setValidationMsg] = (0, import_react2.useState)(null);
-    (0, import_react2.useEffect)(() => {
-      onStateUpdate((newState) => {
-        setBotState(newState);
-      });
+    const [chatMessages, setChatMessages] = (0, import_react9.useState)([]);
+    const [inventory, setInventory] = (0, import_react9.useState)([]);
+    const [minimap, setMinimap] = (0, import_react9.useState)(Array(5).fill(Array(5).fill("#000")));
+    const [isValidating, setIsValidating] = (0, import_react9.useState)(false);
+    const [validationMsg, setValidationMsg] = (0, import_react9.useState)(null);
+    (0, import_react9.useEffect)(() => {
+      onStateUpdate(setBotState);
       onChatUpdate((messageText) => {
         const newMessage = {
           id: Date.now().toString(),
@@ -25484,93 +25071,57 @@
         setValidationMsg(message);
         setTimeout(() => setValidationMsg(null), 5e3);
       });
-    }, []);
-    const handleSendMessage = (0, import_react2.useCallback)((msg) => {
-      emitSendMessage(msg);
-    }, []);
-    const toggleAfk = (0, import_react2.useCallback)(() => {
-      emitToggleAfk();
-    }, []);
-    const validateProxies = (0, import_react2.useCallback)(() => {
+      onInventoryUpdate(setInventory);
+      onMinimapUpdate(setMinimap);
+      const inventoryInterval = setInterval(() => {
+        if (botState.isOnline) emitGetInventory();
+      }, 2e3);
+      const minimapInterval = setInterval(() => {
+        if (botState.isOnline) emitGetMinimap();
+      }, 1e3);
+      return () => {
+        clearInterval(inventoryInterval);
+        clearInterval(minimapInterval);
+      };
+    }, [botState.isOnline]);
+    const handleSendMessage = (0, import_react9.useCallback)((msg) => emitSendMessage(msg), []);
+    const toggleAfk = (0, import_react9.useCallback)(() => emitToggleAfk(), []);
+    const validateProxies = (0, import_react9.useCallback)(() => {
       setIsValidating(true);
       setValidationMsg(null);
       emitValidateProxies();
     }, []);
-    const handleAdminAction = (0, import_react2.useCallback)((action) => {
-      const newMessage = {
-        id: Date.now().toString(),
-        text: `[SYSTEM] Executing: ${action}...`,
-        timestamp: Date.now(),
-        isSystem: true
-      };
-      setChatMessages((prev) => [...prev.slice(-99), newMessage]);
-      if (action === "Clear Local Chat") {
-        setChatMessages([]);
-        return;
-      }
-      if (action === "Reconnect Bot") emitReconnect();
-      if (action === "Force Respawn") emitRespawn();
-      if (action === "Drop Inventory") emitDropInventory();
+    const handleMove = (0, import_react9.useCallback)((direction) => emitMove(direction), []);
+    const handleStopMove = (0, import_react9.useCallback)(() => emitStopMove(), []);
+    const handleAdminAction = (0, import_react9.useCallback)((action) => {
+      setChatMessages((prev) => [...prev.slice(-99), { id: Date.now().toString(), text: `[SYSTEM] Executing: ${action}...`, timestamp: Date.now(), isSystem: true }]);
+      if (action === "Clear Local Chat") setChatMessages([]);
+      else if (action === "Reconnect Bot") emitReconnect();
+      else if (action === "Use Held Item") emitUseItem();
+      else if (action === "Look at Nearest Player") emitLookAtPlayer();
     }, []);
-    return /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "min-h-screen p-4 md:p-8 flex flex-col items-center", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("header", { className: "w-full max-w-7xl mb-8 flex flex-col md:flex-row justify-between items-center gap-4", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { children: [
-          /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("h1", { className: "text-3xl font-black tracking-tighter bg-gradient-to-r from-cyan-400 via-purple-400 to-purple-600 bg-clip-text text-transparent italic", children: "AFK BOT COMMAND" }),
-          /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("p", { className: "text-slate-500 text-xs font-mono uppercase tracking-widest", children: "v2.4.0 \u2022 STABLE CONNECTION" })
-        ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("div", { className: "flex items-center gap-6", children: /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "flex flex-col items-end", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: "text-[10px] text-slate-500 uppercase font-bold tracking-tighter", children: "Connection State" }),
-          /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "flex items-center gap-2", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("div", { className: `w-2 h-2 rounded-full ${botState.isOnline ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" : "bg-red-500"}` }),
-            /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: "font-bold text-sm tracking-tight", children: botState.isOnline ? "ESTABLISHED" : "DISCONNECTED" })
-          ] })
-        ] }) })
-      ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("main", { className: "w-full max-w-7xl grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(StatusPanel_default, { botState }),
-        /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("div", { className: "lg:col-span-2", children: /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(
-          ChatPanel_default,
-          {
-            messages: chatMessages,
-            onSendMessage: handleSendMessage
-          }
-        ) }),
-        /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "space-y-6 lg:col-span-1", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("div", { className: "h-1/2 min-h-[300px]", children: /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(PlayerPanel_default, { botState }) }),
-          /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("div", { className: "h-1/2 min-h-[350px]", children: /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(
-            AdminPanel_default,
-            {
-              botState,
-              onToggleAfk: toggleAfk,
-              onValidateProxies: validateProxies,
-              isValidating,
-              validationMsg,
-              onAction: handleAdminAction
-            }
-          ) })
-        ] })
-      ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("footer", { className: "mt-12 w-full max-w-7xl border-t border-slate-900 pt-6 flex justify-between text-slate-600 text-[10px] font-mono uppercase tracking-widest", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("span", { children: [
-          "\xA9 ",
-          (/* @__PURE__ */ new Date()).getFullYear(),
-          " MC-AFK-CORE"
-        ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { children: "Latency: --ms \u2022 Threads: -- \u2022 Mem: --MB" })
-      ] })
-    ] });
+    return /* @__PURE__ */ import_react9.default.createElement("div", { className: "min-h-screen p-4 md:p-8 flex flex-col items-center" }, /* @__PURE__ */ import_react9.default.createElement("header", { className: "w-full max-w-7xl mb-8 flex flex-col md:flex-row justify-between items-center gap-4" }, /* @__PURE__ */ import_react9.default.createElement("div", null, /* @__PURE__ */ import_react9.default.createElement("h1", { className: "text-3xl font-black tracking-tighter bg-gradient-to-r from-cyan-400 via-purple-400 to-purple-600 bg-clip-text text-transparent italic" }, "AFK BOT COMMAND"), /* @__PURE__ */ import_react9.default.createElement("p", { className: "text-slate-500 text-xs font-mono uppercase tracking-widest" }, "v3.0.0 \u2022 INTERACTIVE")), /* @__PURE__ */ import_react9.default.createElement("div", { className: "flex items-center gap-6" }, /* @__PURE__ */ import_react9.default.createElement("div", { className: "flex flex-col items-end" }, /* @__PURE__ */ import_react9.default.createElement("span", { className: "text-[10px] text-slate-500 uppercase font-bold tracking-tighter" }, "Connection State"), /* @__PURE__ */ import_react9.default.createElement("div", { className: "flex items-center gap-2" }, /* @__PURE__ */ import_react9.default.createElement("div", { className: `w-2 h-2 rounded-full ${botState.isOnline ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" : "bg-red-500"}` }), /* @__PURE__ */ import_react9.default.createElement("span", { className: "font-bold text-sm tracking-tight" }, botState.isOnline ? "ESTABLISHED" : "DISCONNECTED"))))), /* @__PURE__ */ import_react9.default.createElement("main", { className: "w-full max-w-7xl grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" }, /* @__PURE__ */ import_react9.default.createElement("div", { className: "lg:col-span-1 space-y-6" }, /* @__PURE__ */ import_react9.default.createElement(StatusPanel_default, { botState }), /* @__PURE__ */ import_react9.default.createElement(PlayerPanel_default, { botState })), /* @__PURE__ */ import_react9.default.createElement("div", { className: "lg:col-span-2" }, /* @__PURE__ */ import_react9.default.createElement(ChatPanel_default, { messages: chatMessages, onSendMessage: handleSendMessage })), /* @__PURE__ */ import_react9.default.createElement("div", { className: "space-y-6 lg:col-span-1" }, /* @__PURE__ */ import_react9.default.createElement(MinimapPanel_default, { minimap }), /* @__PURE__ */ import_react9.default.createElement(InventoryPanel_default, { inventory })), /* @__PURE__ */ import_react9.default.createElement("div", { className: "lg:col-span-2 space-y-6" }, /* @__PURE__ */ import_react9.default.createElement(MovementPanel_default, { onMove: handleMove, onStop: handleStopMove })), /* @__PURE__ */ import_react9.default.createElement("div", { className: "lg:col-span-2 space-y-6" }, /* @__PURE__ */ import_react9.default.createElement(
+      AdminPanel_default,
+      {
+        botState,
+        onToggleAfk: toggleAfk,
+        onValidateProxies: validateProxies,
+        isValidating,
+        validationMsg,
+        onAction: handleAdminAction
+      }
+    ))), /* @__PURE__ */ import_react9.default.createElement("footer", { className: "mt-12 w-full max-w-7xl border-t border-slate-900 pt-6 flex justify-between text-slate-600 text-[10px] font-mono uppercase tracking-widest" }, /* @__PURE__ */ import_react9.default.createElement("span", null, "\xA9 ", (/* @__PURE__ */ new Date()).getFullYear(), " MC-AFK-CORE"), /* @__PURE__ */ import_react9.default.createElement("span", null, "Latency: ", botState.ping ?? 0, "ms")));
   };
   var App_default = App;
 
   // public/src/index.tsx
-  var import_jsx_runtime7 = __toESM(require_jsx_runtime());
   var rootElement = document.getElementById("root");
   if (!rootElement) {
     throw new Error("Could not find root element to mount to");
   }
   var root = import_client.default.createRoot(rootElement);
   root.render(
-    /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(import_react3.default.StrictMode, { children: /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(App_default, {}) })
+    /* @__PURE__ */ import_react10.default.createElement(import_react10.default.StrictMode, null, /* @__PURE__ */ import_react10.default.createElement(App_default, null))
   );
 })();
 /*! Bundled license information:
@@ -25612,17 +25163,6 @@ react-dom/cjs/react-dom-client.development.js:
   (**
    * @license React
    * react-dom-client.development.js
-   *
-   * Copyright (c) Meta Platforms, Inc. and affiliates.
-   *
-   * This source code is licensed under the MIT license found in the
-   * LICENSE file in the root directory of this source tree.
-   *)
-
-react/cjs/react-jsx-runtime.development.js:
-  (**
-   * @license React
-   * react-jsx-runtime.development.js
    *
    * Copyright (c) Meta Platforms, Inc. and affiliates.
    *
