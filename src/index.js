@@ -167,7 +167,7 @@ function createBot() {
   updateBotInstance(bot);
 
   bot.on('login', () => {
-    console.log(`[Bot] Logged in as '${bot.username}'.`);
+    console.log(`[Bot] Logged in as '${bot.username}'${bot.socket ? ` to ${bot.socket.remoteAddress}` : ''}.`);
     botState.isOnline = true;
     botState.uptime = 0;
     mcData = mc(bot.version);

@@ -4,7 +4,7 @@
   "description": "A Node.js Minecraft AFK bot using Mineflayer for Render",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js",
+    "start": "npm run build && node index.js",
     "build": "esbuild public/src/index.tsx --bundle --outfile=public/bundle.js --jsx=automatic",
     "postinstall": "npm run build"
   },
