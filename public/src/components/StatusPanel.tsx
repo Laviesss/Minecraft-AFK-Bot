@@ -5,76 +5,64 @@ interface StatusPanelProps {
   botState: BotState;
 }
 
-const ProgressBar: React.FC<{ label: string; current: number; max: number; colorClass: (p: number) => string }> = ({ label, current, max, colorClass }) => {
-  const percentage = Math.min(Math.max((current / max) * 100, 0), 100);
-  return (
-    <div className="w-full">
-      <div className="flex justify-between text-xs font-medium mb-1 px-1">
-        <span className="text-slate-400">{label}</span>
-        <span className="text-slate-200">{current}/{max}</span>
+const StatusPanel: React.FC<StatusPanelProps> = ({ botState }) => {
+
+  const formatUptime = (seconds: number) => {
+    const h = Math.floor(seconds / 3600).toString().padStart(2, '0');
+    const m = Math.floor((seconds % 3600) / 60).toString().padStart(2, '0');
+    const s = Math.floor(seconds % 60).toString().padStart(2, '0');
+    return `${h}:${m}:${s}`;
+  };
+
+  const getBarColor = (value: number, max: number) => {
+    const percentage = (value / max) * 100;
+    if (percentage <= 30) return 'bg-red-500';
+    if (percentage <= 60) return 'bg-yellow-500';
+    return 'bg-green-500';
+  };
+
+  const ProgressBar: React.FC<{ label: string; value: number; max: number }> = ({ label, value, max }) => (
+    <div>
+      <div className="flex justify-between items-center mb-1">
+        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{label}</span>
+        <span className="text-xs mono font-semibold">{value} / {max}</span>
       </div>
-      <div className="h-2 w-full bg-slate-800 rounded-full overflow-hidden border border-slate-700">
+      <div className="w-full bg-slate-700/50 rounded-full h-2.5 border border-slate-700">
         <div
-          className={`h-full transition-all duration-500 ${colorClass(percentage)}`}
-          style={{ width: `${percentage}%` }}
+          className={`${getBarColor(value, max)} h-full rounded-full transition-all duration-300`}
+          style={{ width: `${(value / max) * 100}%` }}
         />
       </div>
     </div>
   );
-};
 
-const StatusPanel: React.FC<StatusPanelProps> = ({ botState }) => {
-  const getBarColor = (p: number) => {
-    if (p > 60) return 'bg-[#22c55e]';
-    if (p > 30) return 'bg-[#eab308]';
-    return 'bg-[#ef4444] shadow-[0_0_10px_rgba(239,68,68,0.4)]';
-  };
-
-  const Row = ({ label, value, mono = false, status = false }: { label: string; value: string | number; mono?: boolean; status?: boolean }) => (
-    <div className="flex justify-between items-center py-2 border-b border-slate-800 last:border-0">
-      <span className="text-sm text-[#94a3b8]">{label}</span>
-      <span className={`text-sm ${status ? (value.toString().includes('Online') ? 'text-green-500' : 'text-red-500') : 'text-slate-200'} ${mono ? 'mono' : ''} font-medium`}>
-        {value}
-      </span>
+  const StatusItem: React.FC<{ label: string; value: React.ReactNode }> = ({ label, value }) => (
+    <div className="flex justify-between items-center py-2 border-b border-slate-800/50 last:border-b-0">
+      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{label}</span>
+      <span className="text-xs mono font-semibold text-right">{value}</span>
     </div>
   );
 
   return (
-    <div className="bg-[#0f172a] rounded-xl border border-slate-800 p-5 shadow-xl">
+    <div className="bg-[#0f172a] rounded-xl border border-slate-800 p-4 shadow-xl">
       <div className="flex items-center gap-2 mb-4">
-        <div className="w-2 h-2 rounded-full bg-[#00FFFF] shadow-[0_0_8px_rgba(0,255,255,0.6)]" />
-        <h2 className="text-lg font-bold tracking-tight">BOT STATUS</h2>
+        <div className="w-1.5 h-1.5 rounded-full bg-[#00FFFF] shadow-[0_0_8px_rgba(0,255,255,0.6)]" />
+        <h2 className="text-sm font-bold tracking-tight uppercase text-slate-300">Bot Status</h2>
       </div>
 
-      <div className="space-y-1 mb-6">
-        <Row label="Status" value={botState.isOnline ? "🟢 Online" : "🔴 Offline"} status />
-        <Row label="Server" value={botState.serverAddress} />
-        <Row label="Dashboard" value={botState.dashboardUrl} mono />
-        <Row label="Uptime" value={`${botState.uptime}s`} />
-        <Row label="Proxy" value={botState.proxy || "None"} />
-      </div>
-
-      <div className="space-y-4 mb-6">
-        <ProgressBar label="Health" current={botState.health} max={20} colorClass={getBarColor} />
-        <ProgressBar label="Hunger" current={botState.hunger} max={20} colorClass={getBarColor} />
-      </div>
-
-      <div className="bg-[#1e293b]/50 rounded-lg p-3 border border-slate-800">
-        <span className="text-[10px] text-slate-500 font-bold tracking-widest uppercase block mb-2">Coordinates</span>
-        <div className="flex justify-between items-center text-sm mono text-[#00FFFF]">
-          <div className="flex flex-col">
-            <span className="text-[10px] text-slate-500 uppercase">X</span>
-            <span>{Math.round(botState.coordinates.x)}</span>
-          </div>
-          <div className="flex flex-col">
-            <span className="text-[10px] text-slate-500 uppercase">Y</span>
-            <span>{Math.round(botState.coordinates.y)}</span>
-          </div>
-          <div className="flex flex-col">
-            <span className="text-[10px] text-slate-500 uppercase">Z</span>
-            <span>{Math.round(botState.coordinates.z)}</span>
-          </div>
-        </div>
+      <div className="space-y-3">
+        <StatusItem label="Status" value={
+          <span className={botState.isOnline ? 'text-green-400' : 'text-red-400'}>
+            {botState.isOnline ? 'ONLINE' : 'OFFLINE'}
+          </span>
+        }/>
+        <StatusItem label="Server" value={<span className="truncate">{botState.serverAddress || 'N/A'}</span>} />
+        <StatusItem label="Uptime" value={formatUptime(botState.uptime)} />
+        <StatusItem label="Coordinates" value={
+            `X:${botState.coordinates.x.toFixed(0)} Y:${botState.coordinates.y.toFixed(0)} Z:${botState.coordinates.z.toFixed(0)}`
+        } />
+        <ProgressBar label="Health" value={botState.health} max={20} />
+        <ProgressBar label="Hunger" value={botState.hunger} max={20} />
       </div>
     </div>
   );

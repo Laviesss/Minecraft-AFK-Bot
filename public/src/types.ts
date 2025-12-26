@@ -1,3 +1,19 @@
+// src/types.ts
+
+export interface BotState {
+  isOnline: boolean;
+  serverAddress: string | null;
+  dashboardUrl: string | null;
+  uptime: number;
+  health: number;
+  hunger: number;
+  coordinates: Coordinates;
+  proxy: string | null;
+  playerCount: number;
+  playerList: Player[];
+  isAfkEnabled: boolean;
+}
+
 export interface Coordinates {
   x: number;
   y: number;
@@ -9,20 +25,6 @@ export interface Player {
   ping: number;
 }
 
-export interface BotState {
-  isOnline: boolean;
-  serverAddress: string;
-  dashboardUrl: string;
-  uptime: number;
-  health: number;
-  hunger: number;
-  coordinates: Coordinates;
-  proxy: string | null;
-  playerCount: number;
-  playerList: Player[];
-  isAfkEnabled: boolean;
-}
-
 export interface MinimapBlock {
   type: string;
   height: number;
@@ -31,13 +33,12 @@ export interface MinimapBlock {
 export interface MinimapData {
   map: MinimapBlock[][];
   bot: {
+    x: number;
+    y: number;
+    z: number;
     yaw: number;
   };
-  players: {
-    x: number;
-    z: number;
-    username: string;
-  }[];
+  players: Coordinates[];
 }
 
 export interface InventoryItem {
