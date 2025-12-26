@@ -3,37 +3,62 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Minecraft AFK Bot Dashboard</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Mineflayer Dashboard</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #020617;
-            color: #f8fafc;
+        body, html {
             margin: 0;
-            overflow-x: hidden;
+            padding: 0;
+            height: 100%;
+            overflow: hidden;
+            background-color: #1a1a1a;
+            color: white;
+            font-family: sans-serif;
         }
-        .mono {
-            font-family: 'JetBrains+Mono', monospace;
+        h1 {
+            text-align: center;
+            margin: 10px 0;
         }
-        ::-webkit-scrollbar {
-            width: 6px;
+        #dashboard {
+            display: flex;
+            flex-wrap: wrap;
+            height: calc(100vh - 50px); /* Adjusted for heading */
         }
-        ::-webkit-scrollbar-track {
-            background: #0f172a;
+        .iframe-container {
+            border: 1px solid #333;
+            box-sizing: border-box;
+            overflow: hidden;
         }
-        ::-webkit-scrollbar-thumb {
-            background: #1e293b;
-            border-radius: 3px;
+        #viewer-container {
+            width: 70%;
+            height: 70%;
         }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #334155;
+        #radar-container {
+            width: 30%;
+            height: 70%;
+        }
+        #inventory-container {
+            width: 100%;
+            height: 30%;
+        }
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
         }
     </style>
 </head>
 <body>
-    <div id="root"></div>
-    <script type="module" src="/bundle.js"></script>
+    <h1>Mineflayer Dashboard</h1>
+    <div id="dashboard">
+        <div id="viewer-container" class="iframe-container">
+            <iframe src="/viewer" title="Prismarine Viewer"></iframe>
+        </div>
+        <div id="radar-container" class="iframe-container">
+            <iframe src="/radar" title="Mineflayer Radar"></iframe>
+        </div>
+        <div id="inventory-container" class="iframe-container">
+            <iframe src="/inventory" title="Web Inventory"></iframe>
+        </div>
+    </div>
 </body>
 </html>
