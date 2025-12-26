@@ -1,81 +1,75 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ChatMessage } from '../types';
 
 interface ChatPanelProps {
-  messages: ChatMessage[];
-  onSendMessage: (msg: string) => void;
+  messages: string[];
+  onSendMessage: (message: string) => void;
 }
 
 const ChatPanel: React.FC<ChatPanelProps> = ({ messages, onSendMessage }) => {
   const [input, setInput] = useState('');
-  const chatEndRef = useRef<HTMLDivElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+  useEffect(scrollToBottom, [messages]);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSend = () => {
     if (input.trim()) {
-      onSendMessage(input);
+      onSendMessage(input.trim());
       setInput('');
     }
   };
 
-  const formatMessage = (text: string) => {
-    // Regex to match <username>
-    const userMatch = text.match(/^<([^>]+)>/);
-    if (userMatch) {
-      const username = userMatch[1];
-      const rest = text.substring(userMatch[0].length);
-      return (
-        <>
-          <span className="text-cyan-400 font-bold">&lt;{username}&gt;</span>
-          <span className="text-slate-200">{rest}</span>
-        </>
-      );
+  const parseMessage = (msg: string) => {
+    const match = msg.match(/<([^>]+)> (.*)/);
+    if (match) {
+      return { username: match[1], content: match[2] };
     }
-    return <span className="text-slate-200">{text}</span>;
+    return { username: null, content: msg };
   };
 
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-xl flex flex-col h-[500px] lg:h-[600px] shadow-xl overflow-hidden">
-      <div className="p-4 border-b border-slate-800 flex items-center gap-2">
-        <span className="w-2 h-2 rounded-full bg-purple-500 shadow-[0_0_10px_rgba(138,43,226,0.8)]"></span>
-        <h2 className="text-xl font-bold">Live Chat</h2>
+    <div className="bg-[#0f172a] rounded-xl border border-slate-800 p-4 shadow-xl flex flex-col h-full">
+      <div className="flex items-center gap-2 mb-4">
+        <div className="w-1.5 h-1.5 rounded-full bg-[#00FFFF] shadow-[0_0_8px_rgba(0,255,255,0.6)]" />
+        <h2 className="text-sm font-bold tracking-tight uppercase text-slate-300">Live Chat</h2>
       </div>
-
-      <div className="flex-1 overflow-y-auto p-4 space-y-2 font-mono text-sm bg-slate-950/50">
-        {messages.map((msg) => (
-          <div key={msg.id} className={`flex gap-2 ${msg.isSystem ? 'italic text-slate-400' : ''}`}>
-             <span className="text-slate-600 shrink-0">
-               [{new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}]
-             </span>
-             <div>{formatMessage(msg.text)}</div>
-          </div>
-        ))}
-        <div ref={chatEndRef} />
+      <div className="flex-grow bg-slate-900/50 rounded-lg p-3 overflow-y-auto custom-scrollbar border border-slate-700/50 shadow-inner">
+        {messages.map((msg, i) => {
+           const { username, content } = parseMessage(msg);
+           return (
+            <div key={i} className="text-xs leading-relaxed text-slate-300 mb-1.5 last:mb-0">
+              {username ? (
+                <>
+                  <span className="font-bold text-[#00FFFF] mr-1.5">{username}:</span>
+                  <span className="text-slate-200">{content}</span>
+                </>
+              ) : (
+                <span className="text-slate-400 italic">{content}</span>
+              )}
+            </div>
+           );
+        })}
+        <div ref={messagesEndRef} />
       </div>
-
-      <form onSubmit={handleSubmit} className="p-4 bg-slate-900 border-t border-slate-800 flex gap-2">
+      <div className="mt-4 flex gap-2">
         <input
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
+          onKeyPress={(e) => e.key === 'Enter' && handleSend()}
           placeholder="Send a message..."
-          className="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all placeholder:text-slate-600"
+          className="flex-grow bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-[#8A2BE2] transition-all"
         />
         <button
-          type="submit"
-          className="bg-purple-600 hover:bg-purple-500 text-white font-semibold px-4 py-2 rounded-lg text-sm transition-colors shadow-[0_0_15px_rgba(138,43,226,0.3)]"
+          onClick={handleSend}
+          className="bg-[#8A2BE2] text-white font-bold rounded-lg px-4 py-2 text-xs hover:bg-[#9d46f5] transition-colors active:scale-95"
         >
-          Send
+          SEND
         </button>
-      </form>
+      </div>
     </div>
   );
 };

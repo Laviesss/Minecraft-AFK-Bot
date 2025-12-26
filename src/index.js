@@ -57,16 +57,22 @@ app.use(express.static(path.join(__dirname, '../public')));
 io.on('connection', (socket) => {
   socket.emit('state', botState);
 
+  console.log(`[Socket] New connection: ${socket.id}`);
+  socket.emit('state', botState);
+
   socket.on('chat-message', (msg) => {
+    console.log(`[Socket] Received chat-message: "${msg}"`);
     if (bot && botState.isOnline && msg) bot.chat(msg);
   });
 
   socket.on('toggle-afk', () => {
     botState.isAfkEnabled = !botState.isAfkEnabled;
+    console.log(`[Socket] Toggled Anti-AFK to ${botState.isAfkEnabled ? 'ON' : 'OFF'}`);
     io.emit('chat', `[SYSTEM] Anti-AFK is now ${botState.isAfkEnabled ? 'ON' : 'OFF'}.`);
   });
 
   socket.on('get-inventory', () => {
+    console.log('[Socket] Received get-inventory');
     if (bot && botState.isOnline) {
       const items = bot.inventory.items().map(item => ({ name: item.displayName, count: item.count }));
       socket.emit('inventory-update', items);
@@ -74,6 +80,7 @@ io.on('connection', (socket) => {
   });
 
   socket.on('use-item', () => {
+    console.log('[Socket] Received use-item');
     if (bot && botState.isOnline) {
       bot.activateItem();
       io.emit('chat', '[SYSTEM] Used held item.');
@@ -81,6 +88,7 @@ io.on('connection', (socket) => {
   });
 
   socket.on('look-at-player', () => {
+    console.log('[Socket] Received look-at-player');
     if (bot && botState.isOnline) {
       const nearestPlayer = bot.nearestEntity(entity => entity.type === 'player');
       if (nearestPlayer) {
@@ -93,25 +101,30 @@ io.on('connection', (socket) => {
   });
 
   socket.on('move', (direction) => {
+    console.log(`[Socket] Received move: ${direction}`);
     if (bot && botState.isOnline) {
-      bot.setControlState(direction, true);
-      setTimeout(() => bot.setControlState(direction, false), 200);
+      const correctedDirection = direction === 'backward' ? 'back' : direction;
+      bot.setControlState(correctedDirection, true);
+      setTimeout(() => bot.setControlState(correctedDirection, false), 200);
     }
   });
 
   socket.on('stop-move', (direction) => {
+    console.log('[Socket] Received stop-move');
      if (bot && botState.isOnline) {
        bot.clearControlStates();
      }
   });
 
   socket.on('get-minimap', () => {
+    console.log('[Socket] Received get-minimap');
     if (!bot || !botState.isOnline || !mcData) return;
     const minimap = getWebMinimap(bot, mcData);
     socket.emit('minimap-update', minimap);
   });
 
   socket.on('reconnect-bot', () => {
+    console.log('[Socket] Received reconnect-bot');
     if (bot) bot.end('Manual reconnect triggered from dashboard.');
   });
 });
@@ -154,7 +167,7 @@ function createBot() {
   updateBotInstance(bot);
 
   bot.on('login', () => {
-    console.log(`Logged in as '${bot.username}'.`);
+    console.log(`[Bot] Logged in as '${bot.username}'${bot.socket ? ` to ${bot.socket.remoteAddress}` : ''}.`);
     botState.isOnline = true;
     botState.uptime = 0;
     mcData = mc(bot.version);
@@ -165,7 +178,7 @@ function createBot() {
   });
 
   bot.on('spawn', () => {
-    console.log('Bot spawned.');
+    console.log('[Bot] Spawned into the world.');
     botState.health = bot.health;
     botState.hunger = bot.food;
     botState.coordinates = bot.entity.position;
@@ -184,7 +197,7 @@ function createBot() {
 
   const updatePlayers = () => {
     botState.playerCount = Object.keys(bot.players).length;
-    botState.playerList = Object.keys(bot.players);
+    botState.playerList = Object.values(bot.players).map(p => ({ username: p.username, ping: p.ping }));
   };
   bot.on('playerJoined', p => {
     updatePlayers();
@@ -266,14 +279,22 @@ function createBot() {
       const embed = new EmbedBuilder().setColor(0xFF5555).setTitle('‼️ Bot Kicked').setDescription(`**Reason:** \`\`\`${reasonText}\`\`\``);
       sendMessageToChannel(embed);
   });
-  bot.on('error', (err) => console.error('Bot error:', err));
+  bot.on('error', (err) => console.error('[Bot] Error:', err));
   bot.on('end', (reason) => {
-    console.log(`Disconnected. Reason: ${reason}. Reconnecting...`);
+    console.log(`[Bot] Disconnected. Reason: ${reason}. Reconnecting in 10 seconds...`);
     botState.isOnline = false;
+    botState.lastDisconnectReason = reason;
     if (antiAfkInterval) clearInterval(antiAfkInterval);
     if (uptimeInterval) clearInterval(uptimeInterval);
-    const embed = new EmbedBuilder().setColor(0xFF5555).setTitle('❌ Bot Disconnected').setDescription(`**Reason:** ${reason}. Reconnecting in 10s...`);
+
+    const embed = new EmbedBuilder()
+        .setColor(0xFF5555)
+        .setTitle('❌ Bot Disconnected')
+        .setDescription(`**Reason:** ${reason}. Reconnecting in 10s...`);
     sendMessageToChannel(embed);
+
+    // Cleanup listeners before creating a new bot instance
+    bot.removeAllListeners();
     setTimeout(createBot, 10000);
   });
 }

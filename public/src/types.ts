@@ -1,27 +1,49 @@
+// src/types.ts
+
 export interface BotState {
   isOnline: boolean;
-  serverAddress: string;
+  serverAddress: string | null;
+  dashboardUrl: string | null;
   uptime: number;
   health: number;
   hunger: number;
-  coordinates: { x: number; y: number; z: number };
+  coordinates: Coordinates;
   proxy: string | null;
   playerCount: number;
-  playerList: string[];
+  playerList: Player[];
   isAfkEnabled: boolean;
-  ping?: number;
 }
 
-export interface ChatMessage {
-  id: string;
-  text: string;
-  timestamp: number;
-  isSystem: boolean;
+export interface Coordinates {
+  x: number;
+  y: number;
+  z: number;
+}
+
+export interface Player {
+  username: string;
+  ping: number;
+}
+
+export interface MinimapBlock {
+  type: string;
+  height: number;
+}
+
+export interface MinimapData {
+  map: MinimapBlock[][];
+  bot: {
+    x: number;
+    y: number;
+    z: number;
+    yaw: number;
+  };
+  players: Coordinates[];
 }
 
 export interface InventoryItem {
-    name: string;
-    count: number;
+  name: string;
+  count: number;
 }
 
-export type Minimap = string[][];
+export type MoveDirection = 'forward' | 'back' | 'left' | 'right' | 'jump' | 'sprint' | 'sneak';

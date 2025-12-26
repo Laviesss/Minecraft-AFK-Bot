@@ -1,90 +1,68 @@
 import React from 'react';
 import { BotState } from '../types';
-import ProgressBar from './ProgressBar';
 
 interface StatusPanelProps {
   botState: BotState;
 }
 
 const StatusPanel: React.FC<StatusPanelProps> = ({ botState }) => {
-  const { coordinates, isOnline } = botState;
 
-  const offlineDisplay = <span className="font-mono text-slate-500">N/A</span>;
+  const formatUptime = (seconds: number) => {
+    const h = Math.floor(seconds / 3600).toString().padStart(2, '0');
+    const m = Math.floor((seconds % 3600) / 60).toString().padStart(2, '0');
+    const s = Math.floor(seconds % 60).toString().padStart(2, '0');
+    return `${h}:${m}:${s}`;
+  };
+
+  const getBarColor = (value: number, max: number) => {
+    const percentage = (value / max) * 100;
+    if (percentage <= 30) return 'bg-red-500';
+    if (percentage <= 60) return 'bg-yellow-500';
+    return 'bg-green-500';
+  };
+
+  const ProgressBar: React.FC<{ label: string; value: number; max: number }> = ({ label, value, max }) => (
+    <div>
+      <div className="flex justify-between items-center mb-1">
+        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{label}</span>
+        <span className="text-xs mono font-semibold">{value} / {max}</span>
+      </div>
+      <div className="w-full bg-slate-700/50 rounded-full h-2.5 border border-slate-700">
+        <div
+          className={`${getBarColor(value, max)} h-full rounded-full transition-all duration-300`}
+          style={{ width: `${(value / max) * 100}%` }}
+        />
+      </div>
+    </div>
+  );
+
+  const StatusItem: React.FC<{ label: string; value: React.ReactNode }> = ({ label, value }) => (
+    <div className="flex justify-between items-center py-2 border-b border-slate-800/50 last:border-b-0">
+      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{label}</span>
+      <span className="text-xs mono font-semibold text-right">{value}</span>
+    </div>
+  );
 
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-xl flex flex-col h-full border-l-4 border-l-cyan-500">
-      <h2 className="text-2xl font-extrabold mb-8 flex items-center gap-3 text-slate-100">
-        Status Panel
-      </h2>
+    <div className="bg-[#0f172a] rounded-xl border border-slate-800 p-4 shadow-xl">
+      <div className="flex items-center gap-2 mb-4">
+        <div className="w-1.5 h-1.5 rounded-full bg-[#00FFFF] shadow-[0_0_8px_rgba(0,255,255,0.6)]" />
+        <h2 className="text-sm font-bold tracking-tight uppercase text-slate-300">Bot Status</h2>
+      </div>
 
-      <div className="space-y-6 overflow-y-auto pr-2">
-        {/* Status */}
-        <div className="flex justify-between items-center group">
-          <span className="text-slate-400 font-medium">Status:</span>
-          <span className={`font-black text-lg tracking-tight ${isOnline ? 'text-cyan-400' : 'text-red-500'}`}>
-            {isOnline ? 'Online' : 'Offline'}
+      <div className="space-y-3">
+        <StatusItem label="Status" value={
+          <span className={botState.isOnline ? 'text-green-400' : 'text-red-400'}>
+            {botState.isOnline ? 'ONLINE' : 'OFFLINE'}
           </span>
-        </div>
-
-        {/* Uptime */}
-        <div className="flex justify-between items-center">
-          <span className="text-slate-400 font-medium">Uptime:</span>
-          {isOnline ? <span className="font-bold text-slate-100 font-mono">{botState.uptime}s</span> : offlineDisplay}
-        </div>
-
-        {/* Health */}
-        <div className="space-y-2">
-          <div className="flex justify-between items-center">
-            <span className="text-slate-400 font-medium">Health:</span>
-            {isOnline ? <span className="font-bold text-slate-100 font-mono">{botState.health}/20</span> : offlineDisplay}
-          </div>
-          <ProgressBar
-            value={isOnline ? botState.health : 0}
-            max={20}
-            colorMap={{ low: 'bg-red-500', med: 'bg-yellow-500', high: 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.4)]' }}
-          />
-        </div>
-
-        {/* Hunger */}
-        <div className="space-y-2">
-          <div className="flex justify-between items-center">
-            <span className="text-slate-400 font-medium">Hunger:</span>
-            {isOnline ? <span className="font-bold text-slate-100 font-mono">{botState.hunger}/20</span> : offlineDisplay}
-          </div>
-          <ProgressBar
-            value={isOnline ? botState.hunger : 0}
-            max={20}
-            colorMap={{ low: 'bg-red-500', med: 'bg-yellow-500', high: 'bg-orange-500 shadow-[0_0_10px_rgba(249,115,22,0.4)]' }}
-          />
-        </div>
-
-        {/* Coords */}
-        <div className="flex justify-between items-center">
-          <span className="text-slate-400 font-medium">Coords:</span>
-          {isOnline ? (
-            <span className="font-bold text-slate-100 font-mono text-sm tracking-tight bg-slate-800 px-2 py-1 rounded">
-              X:{coordinates.x.toFixed(0)} Y:{coordinates.y.toFixed(0)} Z:{coordinates.z.toFixed(0)}
-            </span>
-          ) : offlineDisplay}
-        </div>
-
-        {/* Players */}
-        <div className="flex justify-between items-center">
-          <span className="text-slate-400 font-medium">Players:</span>
-          {isOnline ? (
-            <div className="flex items-center gap-2">
-              <span className="font-black text-cyan-400 text-lg">{botState.playerCount}</span>
-            </div>
-          ) : offlineDisplay}
-        </div>
-
-        {/* Proxy Info */}
-        {botState.proxy && (
-          <div className="mt-4 pt-4 border-t border-slate-800/50 flex justify-between items-center opacity-50 text-[10px] uppercase tracking-widest font-bold">
-            <span className="text-slate-500">Network Proxy</span>
-            <span className="text-cyan-600">{botState.proxy}</span>
-          </div>
-        )}
+        }/>
+        <StatusItem label="Server" value={<span className="truncate">{botState.serverAddress || 'N/A'}</span>} />
+        <StatusItem label="Uptime" value={formatUptime(botState.uptime)} />
+        <StatusItem label="Coordinates" value={
+            `X:${botState.coordinates.x.toFixed(0)} Y:${botState.coordinates.y.toFixed(0)} Z:${botState.coordinates.z.toFixed(0)}`
+        } />
+        <ProgressBar label="Health" value={botState.health} max={20} />
+        <ProgressBar label="Hunger" value={botState.hunger} max={20} />
       </div>
     </div>
   );
