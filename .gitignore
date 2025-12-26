@@ -1,12 +1,11 @@
 # Dependencies
 /node_modules
 
-# Logs
-/logs
-!/logs/.gitkeep
-
 # Environment variables
 .env
 
-# Build output
-/public/bundle.js
+# Log files
+*.log
+
+# Build artifacts
+public/bundle.js
