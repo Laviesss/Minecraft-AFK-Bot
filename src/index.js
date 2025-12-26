@@ -9,7 +9,6 @@ const proxyManager = require('./proxyManager');
 // --- Plugin Imports ---
 const autoAuth = require('mineflayer-auto-auth');
 const radar = require('mineflayer-radar');
-const viewer = require('prismarine-viewer').mineflayer;
 const webInventory = require('mineflayer-web-inventory');
 
 // --- Global State ---
@@ -30,7 +29,6 @@ const config = {
   admins: (process.env.ADMIN_USERNAMES || '').split(',').filter(Boolean),
   authPassword: process.env.MC_PASSWORD,
   mainDashboardPort: parseInt(process.env.PORT || 8080, 10),
-  viewerPort: parseInt(process.env.VIEWER_PORT || 3001, 10),
   inventoryPort: parseInt(process.env.INVENTORY_PORT || 3002, 10),
   radarPort: parseInt(process.env.RADAR_PORT || 3003, 10),
 };
@@ -101,9 +99,6 @@ function createBot() {
 
   bot.on('spawn', () => {
     console.log('[Bot] Spawned into the world.');
-    console.log(`[Viewer] Starting viewer on port ${config.viewerPort}`);
-    viewer(bot, { port: config.viewerPort, firstPerson: false });
-
     console.log(`[Inventory] Starting web inventory on port ${config.inventoryPort}`);
     webInventory(bot, { port: config.inventoryPort });
 
