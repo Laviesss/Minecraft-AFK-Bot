@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "npm run build && node index.js",
-    "build": "esbuild public/src/index.tsx --bundle --outfile=public/bundle.js --jsx=automatic",
+    "build": "./node_modules/.bin/esbuild public/src/index.tsx --bundle --outfile=public/bundle.js --loader:.tsx=tsx --resolve-extensions=.ts,.tsx,.js,.jsx --jsx-factory=React.createElement --jsx-fragment=React.Fragment",
     "postinstall": "npm run build"
   },
   "dependencies": {
