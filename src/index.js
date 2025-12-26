@@ -3,12 +3,14 @@ const mineflayer = require('mineflayer');
 const http = require('http');
 const express = require('express');
 const path = require('path');
+const { createProxyMiddleware } = require('http-proxy-middleware');
 const { initDiscord, sendMessageToChannel, updateBotInstance, EmbedBuilder } = require('./discord');
 const proxyManager = require('./proxyManager');
 
 // --- Plugin Imports ---
 const autoAuth = require('mineflayer-auto-auth');
 const radar = require('mineflayer-radar');
+const viewer = require('prismarine-viewer').mineflayer;
 const webInventory = require('mineflayer-web-inventory');
 
 // --- Global State ---
@@ -29,6 +31,7 @@ const config = {
   admins: (process.env.ADMIN_USERNAMES || '').split(',').filter(Boolean),
   authPassword: process.env.MC_PASSWORD,
   mainDashboardPort: parseInt(process.env.PORT || 8080, 10),
+  viewerPort: parseInt(process.env.VIEWER_PORT || 3001, 10),
   inventoryPort: parseInt(process.env.INVENTORY_PORT || 3002, 10),
   radarPort: parseInt(process.env.RADAR_PORT || 3003, 10),
 };
@@ -46,10 +49,16 @@ if (!config.authPassword) {
   console.warn('Warning: MC_PASSWORD is not set. The auto-auth plugin will not be able to log in.');
 }
 
-// --- Web Server Setup ---
+// --- Web Server & Reverse Proxy Setup ---
 const app = express();
 const server = http.createServer(app);
 
+// Proxy requests to the plugin servers
+app.use('/viewer', createProxyMiddleware({ target: `http://localhost:${config.viewerPort}`, ws: true }));
+app.use('/inventory', createProxyMiddleware({ target: `http://localhost:${config.inventoryPort}`, ws: true }));
+app.use('/radar', createProxyMiddleware({ target: `http://localhost:${config.radarPort}`, ws: true }));
+
+// Serve the main dashboard file
 app.use(express.static(path.join(__dirname, '../public')));
 
 server.listen(config.mainDashboardPort, () => {
@@ -99,6 +108,9 @@ function createBot() {
 
   bot.on('spawn', () => {
     console.log('[Bot] Spawned into the world.');
+    console.log(`[Viewer] Starting viewer on port ${config.viewerPort}`);
+    viewer(bot, { port: config.viewerPort, firstPerson: false });
+
     console.log(`[Inventory] Starting web inventory on port ${config.inventoryPort}`);
     webInventory(bot, { port: config.inventoryPort });
 

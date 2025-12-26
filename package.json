@@ -7,14 +7,17 @@
     "start": "node src/index.js"
   },
   "dependencies": {
+    "canvas": "^2.11.2",
     "discord.js": "^14.25.1",
     "dotenv": "^17.2.3",
     "express": "^4.19.2",
+    "http-proxy-middleware": "^3.0.0",
     "minecraft-data": "^3.102.2",
     "mineflayer": "^4.20.1",
     "mineflayer-auto-auth": "^2.0.0",
     "mineflayer-radar": "^0.0.2",
     "mineflayer-web-inventory": "^1.8.5",
+    "prismarine-viewer": "^1.33.0",
     "proxy-agent": "^6.5.0",
     "socket.io": "^4.8.3",
     "socket.io-client": "^4.8.3",
