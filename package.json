@@ -4,9 +4,7 @@
   "description": "A Node.js Minecraft AFK bot using Mineflayer for Render",
   "main": "index.js",
   "scripts": {
-    "start": "npm run build && node index.js",
-    "build": "esbuild public/src/index.tsx --bundle --outfile=public/bundle.js --loader:.tsx=tsx --resolve-extensions=.ts,.tsx,.js,.jsx --jsx-factory=React.createElement --jsx-fragment=React.Fragment",
-    "postinstall": "npm run build"
+    "start": "node index.js"
   },
   "dependencies": {
     "canvas": "^3.2.0",
@@ -29,10 +27,5 @@
   },
   "engines": {
     "node": "^22.0.0"
-  },
-  "devDependencies": {
-    "esbuild": "^0.27.2",
-    "react": "^19.2.3",
-    "react-dom": "^19.2.3"
   }
 }
