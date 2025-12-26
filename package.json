@@ -18,7 +18,9 @@
     "socket.io": "^4.8.3",
     "socket.io-client": "^4.8.3",
     "socks": "^2.8.7",
-    "vec3": "^0.1.10"
+    "vec3": "^0.1.10",
+    "winston": "^3.19.0",
+    "winston-daily-rotate-file": "^5.0.0"
   },
   "engines": {
     "node": "^22.0.0"

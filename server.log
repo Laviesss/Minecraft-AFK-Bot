@@ -1,0 +1,21 @@
+
+> minecraft-afk-bot@1.0.0 start
+> npm run build && node index.js
+
+
+> minecraft-afk-bot@1.0.0 build
+> esbuild public/src/index.tsx --bundle --outfile=public/bundle.js --loader:.tsx=tsx --resolve-extensions=.ts,.tsx,.js,.jsx --jsx-factory=React.createElement --jsx-fragment=React.Fragment
+
+
+  public/bundle.js  1.2mb ⚠️
+
+⚡ Done in 85ms
+[dotenv@17.2.3] injecting env (2) from .env -- tip: 🗂️ backup and recover secrets: https://dotenvx.com/ops
+2025-12-26 16:03:16 [32minfo[39m: Web server listening on http://localhost:8080
+Validating 0 proxies with extended auto-detection...
+Validation complete. 0/0 proxies are working.
+DISCORD_BOT_TOKEN not set. Discord integration disabled.
+2025-12-26 16:03:50 [32minfo[39m: [Socket] New connection: IqNlxXX4m8UMKukrAAAC
+2025-12-26 16:04:23 [32minfo[39m: [Socket] New connection: cci1pNzqoH_Fh01LAAAF
+2025-12-26 16:04:49 [32minfo[39m: [Socket] New connection: GNgWlzWJHd5wjtqvAAAI
+2025-12-26 16:05:18 [32minfo[39m: [Socket] New connection: qAzxpOnbzodaHtBAAAAL

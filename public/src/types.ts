@@ -43,7 +43,9 @@ export interface MinimapData {
 
 export interface InventoryItem {
   name: string;
+  displayName: string;
   count: number;
+  slot: number;
 }
 
 export type MoveDirection = 'forward' | 'back' | 'left' | 'right' | 'jump' | 'sprint' | 'sneak';

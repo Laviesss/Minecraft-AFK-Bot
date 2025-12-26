@@ -9,6 +9,7 @@ const { initDiscord, sendMessageToChannel, updateBotInstance, EmbedBuilder } = r
 const proxyManager = require('./proxyManager');
 const mc = require('minecraft-data');
 const { getWebMinimap } = require('./utils');
+const logger = require('./logger');
 
 // --- Global State ---
 const botState = {
@@ -38,11 +39,11 @@ const config = {
 };
 
 if (!config.host || !config.username) {
-  console.error('Missing required environment variables: MC_SERVER_ADDRESS and MC_USERNAME.');
+  logger.error('Missing required environment variables: MC_SERVER_ADDRESS and MC_USERNAME.');
   process.exit(1);
 }
 if (config.authMethod === 'microsoft' && !config.microsoftEmail) {
-  console.error('AUTH_METHOD is "microsoft" but MICROSOFT_EMAIL is not set.');
+  logger.error('AUTH_METHOD is "microsoft" but MICROSOFT_EMAIL is not set.');
   process.exit(1);
 }
 
@@ -57,30 +58,35 @@ app.use(express.static(path.join(__dirname, '../public')));
 io.on('connection', (socket) => {
   socket.emit('state', botState);
 
-  console.log(`[Socket] New connection: ${socket.id}`);
+  logger.info(`[Socket] New connection: ${socket.id}`);
   socket.emit('state', botState);
 
   socket.on('chat-message', (msg) => {
-    console.log(`[Socket] Received chat-message: "${msg}"`);
+    logger.info(`[Socket] Received chat-message: "${msg}"`);
     if (bot && botState.isOnline && msg) bot.chat(msg);
   });
 
   socket.on('toggle-afk', () => {
     botState.isAfkEnabled = !botState.isAfkEnabled;
-    console.log(`[Socket] Toggled Anti-AFK to ${botState.isAfkEnabled ? 'ON' : 'OFF'}`);
+    logger.info(`[Socket] Toggled Anti-AFK to ${botState.isAfkEnabled ? 'ON' : 'OFF'}`);
     io.emit('chat', `[SYSTEM] Anti-AFK is now ${botState.isAfkEnabled ? 'ON' : 'OFF'}.`);
   });
 
   socket.on('get-inventory', () => {
-    console.log('[Socket] Received get-inventory');
+    logger.info('[Socket] Received get-inventory');
     if (bot && botState.isOnline) {
-      const items = bot.inventory.items().map(item => ({ name: item.displayName, count: item.count }));
+      const items = bot.inventory.items().map(item => ({
+        name: item.name,
+        displayName: item.displayName,
+        count: item.count,
+        slot: item.slot
+      }));
       socket.emit('inventory-update', items);
     }
   });
 
   socket.on('use-item', () => {
-    console.log('[Socket] Received use-item');
+    logger.info('[Socket] Received use-item');
     if (bot && botState.isOnline) {
       bot.activateItem();
       io.emit('chat', '[SYSTEM] Used held item.');
@@ -88,7 +94,7 @@ io.on('connection', (socket) => {
   });
 
   socket.on('look-at-player', () => {
-    console.log('[Socket] Received look-at-player');
+    logger.info('[Socket] Received look-at-player');
     if (bot && botState.isOnline) {
       const nearestPlayer = bot.nearestEntity(entity => entity.type === 'player');
       if (nearestPlayer) {
@@ -101,7 +107,7 @@ io.on('connection', (socket) => {
   });
 
   socket.on('move', (direction) => {
-    console.log(`[Socket] Received move: ${direction}`);
+    logger.info(`[Socket] Received move: ${direction}`);
     if (bot && botState.isOnline) {
       const correctedDirection = direction === 'backward' ? 'back' : direction;
       bot.setControlState(correctedDirection, true);
@@ -110,21 +116,21 @@ io.on('connection', (socket) => {
   });
 
   socket.on('stop-move', (direction) => {
-    console.log('[Socket] Received stop-move');
+    logger.info('[Socket] Received stop-move');
      if (bot && botState.isOnline) {
        bot.clearControlStates();
      }
   });
 
   socket.on('get-minimap', () => {
-    console.log('[Socket] Received get-minimap');
+    logger.info('[Socket] Received get-minimap');
     if (!bot || !botState.isOnline || !mcData) return;
-    const minimap = getWebMinimap(bot, mcData);
+    const minimap = getWebMinimap(bot);
     socket.emit('minimap-update', minimap);
   });
 
   socket.on('reconnect-bot', () => {
-    console.log('[Socket] Received reconnect-bot');
+    logger.info('[Socket] Received reconnect-bot');
     if (bot) bot.end('Manual reconnect triggered from dashboard.');
   });
 });
@@ -132,7 +138,7 @@ io.on('connection', (socket) => {
 server.listen(listenerPort, () => {
   const externalUrl = process.env.RENDER_EXTERNAL_URL;
   botState.dashboardUrl = externalUrl || `http://localhost:${listenerPort}`;
-  console.log(`Web server listening on ${botState.dashboardUrl}`);
+  logger.info(`Web server listening on ${botState.dashboardUrl}`);
   botState.serverAddress = `${config.host}:${config.port}`;
   botState.version = config.version || 'Auto-detected';
 });
@@ -151,7 +157,7 @@ let mcData;
 function createBot() {
   const proxyDetails = proxyManager.getNextProxy();
   botState.proxy = proxyDetails ? proxyDetails.proxy : null;
-  console.log(`Connecting to ${config.host}:${config.port} as ${config.username}...`);
+  logger.info(`Connecting to ${config.host}:${config.port} as ${config.username}...`);
 
   const botOptions = {
     host: config.host,
@@ -167,7 +173,7 @@ function createBot() {
   updateBotInstance(bot);
 
   bot.on('login', () => {
-    console.log(`[Bot] Logged in as '${bot.username}'${bot.socket ? ` to ${bot.socket.remoteAddress}` : ''}.`);
+    logger.info(`[Bot] Logged in as '${bot.username}'${bot.socket ? ` to ${bot.socket.remoteAddress}` : ''}.`);
     botState.isOnline = true;
     botState.uptime = 0;
     mcData = mc(bot.version);
@@ -178,7 +184,7 @@ function createBot() {
   });
 
   bot.on('spawn', () => {
-    console.log('[Bot] Spawned into the world.');
+    logger.info('[Bot] Spawned into the world.');
     botState.health = bot.health;
     botState.hunger = bot.food;
     botState.coordinates = bot.entity.position;
@@ -188,6 +194,24 @@ function createBot() {
       bot.setControlState('jump', false);
     }, 45000);
   });
+
+  bot.on('death', () => {
+    logger.info('[Bot] The bot has died.');
+    const embed = new EmbedBuilder().setColor(0x000000).setTitle('💀 Bot Died').setDescription('The bot has died and will respawn shortly.');
+    sendMessageToChannel(embed);
+  });
+
+  bot.inventory.on('updateSlot', (slot, oldItem, newItem) => {
+    const oldItemName = oldItem ? `${oldItem.displayName} x${oldItem.count}` : 'empty';
+    const newItemName = newItem ? `${newItem.displayName} x${newItem.count}` : 'empty';
+    if (oldItemName === newItemName) return;
+
+    const message = `[Bot] Inventory update in slot ${slot}: ${oldItemName} -> ${newItemName}`;
+    logger.info(message);
+    const embed = new EmbedBuilder().setColor(0xFFA500).setTitle('🎒 Inventory Updated').setDescription(message.replace('[Bot] ', ''));
+    sendMessageToChannel(embed);
+  });
+
 
   bot.on('health', () => {
     botState.health = bot.health;
@@ -201,16 +225,19 @@ function createBot() {
   };
   bot.on('playerJoined', p => {
     updatePlayers();
+    logger.info(`[Bot] ${p.username} joined the game.`);
     const embed = new EmbedBuilder().setColor(0x55FF55).setTitle('➡️ Player Joined').setDescription(`\`${p.username}\` joined the game.`);
     sendMessageToChannel(embed);
   });
   bot.on('playerLeft', p => {
     updatePlayers();
+    logger.info(`[Bot] ${p.username} left the game.`);
     const embed = new EmbedBuilder().setColor(0xFF5555).setTitle('⬅️ Player Left').setDescription(`\`${p.username}\` left the game.`);
     sendMessageToChannel(embed);
   });
 
   bot.on('chat', (username, message) => {
+    logger.info(`[Chat] <${username}> ${message}`);
     const chatEmbed = new EmbedBuilder().setColor(0xAAAAAA).setDescription(`**${username}:** ${message}`);
     sendMessageToChannel(chatEmbed);
     io.emit('chat', `<${username}> ${message}`);
@@ -276,12 +303,18 @@ function createBot() {
             reasonText += reasonObj.extra.map(item => item.text).join('');
         }
       } catch (e) { /* Not JSON */ }
+      logger.warn(`[Bot] Kicked from server. Reason: ${reasonText}`);
       const embed = new EmbedBuilder().setColor(0xFF5555).setTitle('‼️ Bot Kicked').setDescription(`**Reason:** \`\`\`${reasonText}\`\`\``);
       sendMessageToChannel(embed);
   });
-  bot.on('error', (err) => console.error('[Bot] Error:', err));
+  bot.on('error', (err) => {
+    const message = err.code === 'ECONNRESET'
+      ? `Connection Reset: ${err.message}. This is a common networking issue.`
+      : `An unhandled error occurred: ${err.message}`;
+    logger.warn(`[Bot] ${message}`);
+  });
   bot.on('end', (reason) => {
-    console.log(`[Bot] Disconnected. Reason: ${reason}. Reconnecting in 10 seconds...`);
+    logger.info(`[Bot] Disconnected. Reason: ${reason}. Reconnecting in 10 seconds...`);
     botState.isOnline = false;
     botState.lastDisconnectReason = reason;
     if (antiAfkInterval) clearInterval(antiAfkInterval);
