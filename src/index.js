@@ -4,6 +4,7 @@ const http = require('http');
 const express = require('express');
 const path = require('path');
 const { createProxyMiddleware } = require('http-proxy-middleware');
+const ngrok = require('ngrok');
 const { initDiscord, sendMessageToChannel, updateBotInstance, EmbedBuilder } = require('./discord');
 const proxyManager = require('./proxyManager');
 
@@ -34,6 +35,7 @@ const config = {
   viewerPort: parseInt(process.env.VIEWER_PORT || 3001, 10),
   inventoryPort: parseInt(process.env.INVENTORY_PORT || 3002, 10),
   radarPort: parseInt(process.env.RADAR_PORT || 3003, 10),
+  ngrokAuthToken: process.env.NGROK_AUTH_TOKEN,
 };
 
 // --- Environment Variable Checks ---
@@ -62,9 +64,24 @@ app.use('/radar', createProxyMiddleware({ target: `http://localhost:${config.rad
 app.use(express.static(path.join(__dirname, '../public')));
 
 server.listen(config.mainDashboardPort, () => {
-  const externalUrl = process.env.RENDER_EXTERNAL_URL;
-  botState.dashboardUrl = externalUrl || `http://localhost:${config.mainDashboardPort}`;
-  console.log(`[Dashboard] Main dashboard listening on ${botState.dashboardUrl}`);
+  const localUrl = `http://localhost:${config.mainDashboardPort}`;
+  console.log(`[Dashboard] Main dashboard listening on ${localUrl}`);
+
+  if (config.ngrokAuthToken) {
+    console.log('[ngrok] Authenticating and starting tunnel...');
+    ngrok.authtoken(config.ngrokAuthToken);
+    ngrok.connect(config.mainDashboardPort).then(url => {
+      botState.dashboardUrl = url;
+      console.log(`[ngrok] Tunnel established. Public dashboard is available at: ${url}`);
+    }).catch(err => {
+      console.error('[ngrok] Error starting tunnel:', err);
+    });
+  } else if (process.env.RENDER_EXTERNAL_URL) {
+    botState.dashboardUrl = process.env.RENDER_EXTERNAL_URL;
+    console.log(`[Dashboard] Render dashboard available at ${botState.dashboardUrl}`);
+  } else {
+    botState.dashboardUrl = localUrl;
+  }
 });
 
 

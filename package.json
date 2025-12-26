@@ -4,20 +4,17 @@
   "description": "A Node.js Minecraft AFK bot using Mineflayer for Render",
   "main": "index.js",
   "scripts": {
-    "start": "node src/index.js"
+    "start": "npm run build && node index.js",
+    "build": "esbuild public/src/index.tsx --bundle --outfile=public/bundle.js --loader:.tsx=tsx --resolve-extensions=.ts,.tsx,.js,.jsx --jsx-factory=React.createElement --jsx-fragment=React.Fragment",
+    "postinstall": "npm run build"
   },
   "dependencies": {
-    "canvas": "^2.11.2",
     "discord.js": "^14.25.1",
     "dotenv": "^17.2.3",
     "express": "^4.19.2",
-    "http-proxy-middleware": "^3.0.0",
     "minecraft-data": "^3.102.2",
     "mineflayer": "^4.20.1",
-    "mineflayer-auto-auth": "^2.0.0",
-    "mineflayer-radar": "^0.0.2",
-    "mineflayer-web-inventory": "^1.8.5",
-    "prismarine-viewer": "^1.33.0",
+    "ngrok": "^5.0.0-beta.2",
     "proxy-agent": "^6.5.0",
     "socket.io": "^4.8.3",
     "socket.io-client": "^4.8.3",
@@ -25,7 +22,11 @@
     "vec3": "^0.1.10"
   },
   "engines": {
-    "node": ">=22.0.0"
+    "node": "^22.0.0"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "esbuild": "^0.27.2",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3"
+  }
 }
