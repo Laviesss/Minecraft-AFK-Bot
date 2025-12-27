@@ -20,7 +20,6 @@ const commands = [
     new SlashCommandBuilder().setName('look').setDescription('👀 Looks at the nearest player.'),
     new SlashCommandBuilder().setName('move').setDescription('🏃‍♂️ Moves the bot in a direction.'),
     new SlashCommandBuilder().setName('stop').setDescription('🛑 Stops the bot\'s movement.'),
-    new SlashCommandBuilder().setName('map').setDescription('🗺️ Shows a 5x5 map of the bot\'s surroundings.'),
     new SlashCommandBuilder().setName('say').setDescription('💬 Sends a message to the in-game chat.')
         .addStringOption(option =>
             option.setName('message')
@@ -113,11 +112,6 @@ async function initDiscord(state, config) {
                     } else {
                         embed.setTitle('👀 Look').setDescription('No players nearby.');
                     }
-                    break;
-                case 'map':
-                    mcData = require('minecraft-data')(mineflayerBotRef.version);
-                    const minimap = getDiscordMinimap(mineflayerBotRef);
-                    embed.setTitle('🗺️ Minimap').setDescription(`\`\`\`\n${minimap}\`\`\``).setFooter({ text: '🤖 is you!' });
                     break;
                 case 'move':
                     const row = new ActionRowBuilder().addComponents(

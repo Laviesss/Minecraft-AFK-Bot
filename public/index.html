@@ -74,6 +74,7 @@
         <button class="move-btn" data-direction="left">⬅️ Left</button>
         <button class="move-btn" data-direction="right">➡️ Right</button>
         <button class="move-btn stop-btn" data-direction="stop">🛑 Stop</button>
+        <button id="toggle-perspective-btn" class="move-btn">🔄 Toggle Perspective</button>
     </div>
 
     <div id="dashboard">
@@ -98,6 +99,10 @@
                     socket.emit('move', direction);
                 }
             });
+        });
+
+        document.getElementById('toggle-perspective-btn').addEventListener('click', () => {
+            socket.emit('toggle-perspective');
         });
     </script>
 </body>

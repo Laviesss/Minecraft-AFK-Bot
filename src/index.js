@@ -74,6 +74,14 @@ io.on('connection', (socket) => {
        bot.clearControlStates();
      }
   });
+
+  socket.on('toggle-perspective', () => {
+    console.log('[Socket] Received toggle-perspective');
+    if (viewerInstance) {
+      // The viewer exposes a `toggle` function to switch between 1st and 3rd person
+      viewerInstance.toggle();
+    }
+  });
 });
 
 // --- Proxy Error Handler ---
@@ -98,7 +106,7 @@ app.use(express.static(path.join(__dirname, '../public')));
 server.listen(config.mainDashboardPort, async () => {
   const localUrl = `http://localhost:${config.mainDashboardPort}`;
   console.log(`[Dashboard] Main dashboard listening on ${localUrl}`);
-  console.log('[Proxy] Reverse proxy routes for /viewer, /radar, and /inventory are configured.');
+  console.log('[Proxy] Reverse proxy routes for /viewer and /inventory are configured.');
   botState.dashboardUrl = localUrl;
 
   if (config.ngrokAuthToken) {
@@ -132,6 +140,22 @@ server.listen(config.mainDashboardPort, async () => {
 // --- Mineflayer Bot Logic ---
 let bot;
 let pluginsInitialized = false;
+let viewerInstance;
+let inventoryInstance;
+
+function shutdownPlugins() {
+    if (viewerInstance) {
+        console.log('[Viewer] Closing viewer server...');
+        viewerInstance.close();
+        viewerInstance = null;
+    }
+    if (inventoryInstance) {
+        console.log('[Inventory] Closing inventory server...');
+        inventoryInstance.close();
+        inventoryInstance = null;
+    }
+    pluginsInitialized = false;
+}
 
 function createBot() {
   const proxyDetails = proxyManager.getNextProxy();
@@ -175,11 +199,11 @@ function createBot() {
     console.log('[System] First spawn event. Initializing dashboard plugins...');
     try {
       console.log(`[Viewer] Initializing viewer on port ${config.viewerPort}...`);
-      viewer(bot, { port: config.viewerPort, firstPerson: false });
+      viewerInstance = viewer(bot, { port: config.viewerPort, firstPerson: false });
       console.log(`[Viewer] Viewer initialization complete.`);
 
       console.log(`[Inventory] Initializing web inventory on port ${config.inventoryPort}...`);
-      webInventory(bot, { port: config.inventoryPort });
+      inventoryInstance = webInventory(bot, { port: config.inventoryPort });
       console.log(`[Inventory] Web inventory initialization complete.`);
 
       pluginsInitialized = true;
@@ -205,35 +229,26 @@ function createBot() {
   });
 
   bot.on('error', (err) => {
-    // An error event is not always fatal. Sometimes it's a temporary network issue.
-    // We will log the error, but we will let the 'end' event handle the reconnection logic.
+    // An error event is not always fatal. We will let the 'end' event handle reconnection.
     console.error('[Bot] A non-fatal error occurred:', err);
   });
 
   bot.on('end', (reason) => {
-    const wasOnline = botState.isOnline;
+    console.log(`[Bot] Disconnected. Reason: ${reason}. Attempting to reconnect in 10 seconds...`);
     botState.isOnline = false;
-    pluginsInitialized = false; // Reset the flag
 
-    // Clean up all listeners to prevent memory leaks
+    // Clean up all resources
+    shutdownPlugins();
     if(bot) bot.removeAllListeners();
 
-    if (wasOnline) {
-      // If the bot was fully connected and then disconnected, it's a critical event.
-      // We exit the process to ensure all resources (web servers, etc.) are cleaned up
-      // and the service manager can restart the bot in a pristine state.
-      console.log(`[Bot] Disconnected from an active session. Reason: ${reason}. Exiting for a clean restart.`);
-      const embed = new EmbedBuilder().setColor(0xFF5555).setTitle('❌ Bot Disconnected').setDescription(`**Reason:** ${reason}. The bot will now restart.`);
-      sendMessageToChannel(embed);
-      process.exit(0);
-    } else {
-      // If the bot was never online, it means the initial connection failed.
-      // This is common with temporary network issues, so we will retry internally.
-      console.log(`[Bot] Failed to connect. Reason: ${reason}. Retrying in 10 seconds...`);
-      const embed = new EmbedBuilder().setColor(0xFFA500).setTitle('⚠️ Connection Failed').setDescription(`**Reason:** ${reason}. Retrying in 10s...`);
-      sendMessageToChannel(embed);
-      setTimeout(createBot, 10000);
-    }
+    const embed = new EmbedBuilder()
+        .setColor(0xFFA500)
+        .setTitle('⚠️ Bot Disconnected')
+        .setDescription(`**Reason:** ${reason}. Reconnecting in 10s...`);
+    sendMessageToChannel(embed);
+
+    // Attempt to reconnect
+    setTimeout(createBot, 10000);
   });
 }
 
