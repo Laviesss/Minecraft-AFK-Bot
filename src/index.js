@@ -63,23 +63,36 @@ app.use('/radar', createProxyMiddleware({ target: `http://localhost:${config.rad
 // Serve the main dashboard file
 app.use(express.static(path.join(__dirname, '../public')));
 
-server.listen(config.mainDashboardPort, () => {
+server.listen(config.mainDashboardPort, async () => {
   const localUrl = `http://localhost:${config.mainDashboardPort}`;
   console.log(`[Dashboard] Main dashboard listening on ${localUrl}`);
   console.log('[Proxy] Reverse proxy routes for /viewer, /radar, and /inventory are configured.');
+  botState.dashboardUrl = localUrl;
 
   if (config.ngrokAuthToken) {
     console.log('[ngrok] NGROK_AUTH_TOKEN found. Authenticating and starting tunnel...');
-    ngrok.authtoken(config.ngrokAuthToken);
-    ngrok.connect(config.mainDashboardPort).then(url => {
+    try {
+      await ngrok.authtoken(config.ngrokAuthToken);
+      const url = await ngrok.connect(config.mainDashboardPort);
       botState.dashboardUrl = url;
       console.log(`[ngrok] Tunnel established. Public dashboard is available at: ${url}`);
-    }).catch(err => {
-      console.error('[ngrok] Error starting tunnel:', err);
-    });
+    } catch (err) {
+      console.error('---');
+      console.error('[ngrok] CRITICAL ERROR: Could not create ngrok tunnel.');
+      if (err.body && err.body.details && err.body.details.err.includes('authentication failed')) {
+          console.error('[ngrok] Reason: Your NGROK_AUTH_TOKEN is invalid or expired. Please check it on dash.ngrok.com');
+      } else if (err.code === 'ECONNREFUSED') {
+          console.error('[ngrok] Reason: The connection was refused. This is often caused by antivirus software or a firewall blocking Node.js.');
+          console.error('[ngrok] Action: Please check your firewall/antivirus settings and allow Node.js to make local connections.');
+      } else {
+          console.error('[ngrok] An unexpected error occurred:', err);
+      }
+      console.error(`[ngrok] The bot will continue to run, but the public dashboard will not be available.`);
+      console.error(`[ngrok] You can still access the local dashboard at: ${localUrl}`);
+      console.error('---');
+    }
   } else {
     console.log('[ngrok] NGROK_AUTH_TOKEN not found in .env file. Skipping public tunnel.');
-    botState.dashboardUrl = localUrl;
   }
 });
 
