@@ -178,25 +178,34 @@ function createBot() {
   });
 
   bot.on('error', (err) => {
-    console.error('[Bot] An error occurred:', err);
-    const embed = new EmbedBuilder().setColor(0xFF5555).setTitle('‼️ Bot Error').setDescription(`An unrecoverable error occurred. The bot will now restart.\n\`\`\`${err}\`\`\``);
-    sendMessageToChannel(embed);
-    // Exit the process to allow for a clean restart by the host/service manager
-    process.exit(1);
+    // An error event is not always fatal. Sometimes it's a temporary network issue.
+    // We will log the error, but we will let the 'end' event handle the reconnection logic.
+    console.error('[Bot] A non-fatal error occurred:', err);
   });
 
   bot.on('end', (reason) => {
-    console.log(`[Bot] Disconnected. Reason: ${reason}. Exiting process to allow for a clean restart.`);
+    const wasOnline = botState.isOnline;
     botState.isOnline = false;
 
-    const embed = new EmbedBuilder()
-        .setColor(0xFF5555)
-        .setTitle('❌ Bot Disconnected')
-        .setDescription(`**Reason:** ${reason}. The bot will now restart.`);
-    sendMessageToChannel(embed);
+    // Clean up all listeners to prevent memory leaks
+    if(bot) bot.removeAllListeners();
 
-    // Exit the process to allow for a clean restart
-    process.exit(0);
+    if (wasOnline) {
+      // If the bot was fully connected and then disconnected, it's a critical event.
+      // We exit the process to ensure all resources (web servers, etc.) are cleaned up
+      // and the service manager can restart the bot in a pristine state.
+      console.log(`[Bot] Disconnected from an active session. Reason: ${reason}. Exiting for a clean restart.`);
+      const embed = new EmbedBuilder().setColor(0xFF5555).setTitle('❌ Bot Disconnected').setDescription(`**Reason:** ${reason}. The bot will now restart.`);
+      sendMessageToChannel(embed);
+      process.exit(0);
+    } else {
+      // If the bot was never online, it means the initial connection failed.
+      // This is common with temporary network issues, so we will retry internally.
+      console.log(`[Bot] Failed to connect. Reason: ${reason}. Retrying in 10 seconds...`);
+      const embed = new EmbedBuilder().setColor(0xFFA500).setTitle('⚠️ Connection Failed').setDescription(`**Reason:** ${reason}. Retrying in 10s...`);
+      sendMessageToChannel(embed);
+      setTimeout(createBot, 10000);
+    }
   });
 }
 
