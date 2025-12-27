@@ -164,22 +164,42 @@ function createBot() {
     sendMessageToChannel(embed);
   });
 
-  bot.on('error', (err) => console.error('[Bot] Error:', err));
+  bot.on('error', (err) => {
+    console.error('[Bot] An error occurred:', err);
+    const embed = new EmbedBuilder().setColor(0xFF5555).setTitle('‼️ Bot Error').setDescription(`An unrecoverable error occurred. The bot will now restart.\n\`\`\`${err}\`\`\``);
+    sendMessageToChannel(embed);
+    // Exit the process to allow for a clean restart by the host/service manager
+    process.exit(1);
+  });
 
   bot.on('end', (reason) => {
-    console.log(`[Bot] Disconnected. Reason: ${reason}. Reconnecting in 10 seconds...`);
+    console.log(`[Bot] Disconnected. Reason: ${reason}. Exiting process to allow for a clean restart.`);
     botState.isOnline = false;
 
     const embed = new EmbedBuilder()
         .setColor(0xFF5555)
         .setTitle('❌ Bot Disconnected')
-        .setDescription(`**Reason:** ${reason}. Reconnecting in 10s...`);
+        .setDescription(`**Reason:** ${reason}. The bot will now restart.`);
     sendMessageToChannel(embed);
 
-    bot.removeAllListeners();
-    setTimeout(createBot, 10000);
+    // Exit the process to allow for a clean restart
+    process.exit(0);
   });
 }
+
+// --- Graceful Shutdown ---
+async function shutdown() {
+  console.log('[System] Shutting down...');
+  if (config.ngrokAuthToken) {
+    console.log('[ngrok] Disconnecting tunnel...');
+    await ngrok.disconnect();
+    console.log('[ngrok] Tunnel disconnected.');
+  }
+  process.exit(0);
+}
+process.on('SIGINT', shutdown);
+process.on('SIGTERM', shutdown);
+
 
 // --- Initial Setup ---
 async function start() {
