@@ -10,7 +10,6 @@ const proxyManager = require('./proxyManager');
 
 // --- Plugin Imports ---
 const autoAuth = require('mineflayer-auto-auth');
-const radar = require('mineflayer-radar');
 const viewer = require('prismarine-viewer').mineflayer;
 const webInventory = require('mineflayer-web-inventory');
 
@@ -34,7 +33,6 @@ const config = {
   mainDashboardPort: parseInt(process.env.PORT || 8080, 10),
   viewerPort: parseInt(process.env.VIEWER_PORT || 3001, 10),
   inventoryPort: parseInt(process.env.INVENTORY_PORT || 3002, 10),
-  radarPort: parseInt(process.env.RADAR_PORT || 3003, 10),
   ngrokAuthToken: process.env.NGROK_AUTH_TOKEN,
 };
 
@@ -51,14 +49,48 @@ if (!config.authPassword) {
   console.warn('Warning: MC_PASSWORD is not set. The auto-auth plugin will not be able to log in.');
 }
 
+const { Server } = require("socket.io");
+
 // --- Web Server & Reverse Proxy Setup ---
 const app = express();
 const server = http.createServer(app);
+const io = new Server(server);
+
+// --- Socket.io Event Handlers ---
+io.on('connection', (socket) => {
+  console.log(`[Socket] New connection: ${socket.id}`);
+
+  socket.on('move', (direction) => {
+    console.log(`[Socket] Received move: ${direction}`);
+    if (bot && botState.isOnline) {
+      const correctedDirection = direction === 'backward' ? 'back' : direction;
+      bot.setControlState(correctedDirection, true);
+    }
+  });
+
+  socket.on('stop-move', () => {
+    console.log('[Socket] Received stop-move');
+     if (bot && botState.isOnline) {
+       bot.clearControlStates();
+     }
+  });
+});
+
+// --- Proxy Error Handler ---
+const onProxyError = (err, req, res) => {
+  console.error('[Proxy] Error:', err);
+  res.writeHead(500, {
+    'Content-Type': 'text/plain',
+  });
+  res.end('Something went wrong. And we are reporting a custom error message.');
+};
 
 // Proxy requests to the plugin servers
-app.use('/viewer', createProxyMiddleware({ target: `http://localhost:${config.viewerPort}`, ws: true }));
-app.use('/inventory', createProxyMiddleware({ target: `http://localhost:${config.inventoryPort}`, ws: true }));
-app.use('/radar', createProxyMiddleware({ target: `http://localhost:${config.radarPort}`, ws: true }));
+const viewerProxy = createProxyMiddleware({ target: `http://localhost:${config.viewerPort}`, ws: true, onError: onProxyError });
+const inventoryProxy = createProxyMiddleware({ target: `http://localhost:${config.inventoryPort}`, ws: true, onError: onProxyError });
+
+app.use('/viewer', viewerProxy);
+app.use('/inventory', inventoryProxy);
 
 // Serve the main dashboard file
 app.use(express.static(path.join(__dirname, '../public')));
@@ -150,10 +182,6 @@ function createBot() {
       webInventory(bot, { port: config.inventoryPort });
       console.log(`[Inventory] Web inventory initialization complete.`);
 
-      console.log(`[Radar] Initializing radar on port ${config.radarPort}...`);
-      radar(bot, { port: config.radarPort });
-      console.log(`[Radar] Radar initialization complete.`);
-
       pluginsInitialized = true;
       console.log('[System] All dashboard plugins initialized successfully.');
     } catch (err) {
@@ -225,6 +253,9 @@ process.on('SIGTERM', shutdown);
 
 // --- Initial Setup ---
 async function start() {
+  // Forcefully terminate any lingering ngrok processes on startup
+  await ngrok.kill();
+
   await proxyManager.initialize();
   initDiscord(botState, config);
   createBot();

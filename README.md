@@ -6,8 +6,8 @@ This project provides a powerful, feature-rich Minecraft AFK bot built with Node
 
 - **Unified Web Dashboard:** Access all web-based tools from a single, clean interface.
 - **🌐 3D World Viewer:** See what the bot sees with a live, in-browser 3D render of the world (`prismarine-viewer`).
-- **🗺️ 2D Radar Map:** Get a top-down view of the bot and nearby players (`mineflayer-radar`).
 - **📦 Live Inventory Management:** View and manage the bot's inventory directly from the web dashboard (`mineflayer-web-inventory`).
+- **🏃‍♂️ Movement Controls:** Control the bot's movement directly from the web dashboard and Discord.
 - **🔒 Flexible Authentication:** Supports both `microsoft` (premium) and `offline` (cracked) server authentication.
 - **🔔 Discord Integration:** Get real-time notifications about bot status (connects, disconnects, kicks) in your Discord server.
 - **🛡️ Proxy Support:** Connect through a SOCKS5 proxy by adding your proxies to the `proxies.txt` file.

@@ -15,7 +15,6 @@
     "minecraft-data": "^3.102.2",
     "mineflayer": "^4.33.0",
     "mineflayer-auto-auth": "^2.0.0",
-    "mineflayer-radar": "^0.0.2",
     "mineflayer-web-inventory": "^1.8.5",
     "ngrok": "^5.0.0-beta.2",
     "prismarine-viewer": "^1.33.0",
