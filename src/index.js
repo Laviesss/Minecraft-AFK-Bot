@@ -94,8 +94,20 @@ const onProxyError = (err, req, res) => {
 };
 
 // Proxy requests to the plugin servers
-const viewerProxy = createProxyMiddleware({ target: `http://localhost:${config.viewerPort}`, ws: true, onError: onProxyError });
-const inventoryProxy = createProxyMiddleware({ target: `http://localhost:${config.inventoryPort}`, ws: true, onError: onProxyError });
+const viewerProxy = createProxyMiddleware({
+    target: `http://localhost:${config.viewerPort}`,
+    ws: true,
+    changeOrigin: true,
+    pathRewrite: { '^/viewer': '' },
+    onError: onProxyError,
+});
+const inventoryProxy = createProxyMiddleware({
+    target: `http://localhost:${config.inventoryPort}`,
+    ws: true,
+    changeOrigin: true,
+    pathRewrite: { '^/inventory': '' },
+    onError: onProxyError,
+});
 
 app.use('/viewer', viewerProxy);
 app.use('/inventory', inventoryProxy);
