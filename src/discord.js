@@ -5,9 +5,9 @@ const { getDiscordMinimap } = require('./utils');
 let client;
 let botStateRef;
 let mineflayerBotRef;
-let channelWarningLogged = false;
 let configRef;
 let mcData;
+let discordLogChannel;
 
 const commands = [
     new SlashCommandBuilder().setName('status').setDescription('✨ Displays the full status of the bot.'),
@@ -159,12 +159,28 @@ async function initDiscord(state, config) {
     });
 
     client.on('ready', async () => {
-        console.log(`Discord bot logged in as ${client.user.tag}!`);
+        console.log(`[Discord] Logged in as ${client.user.tag}!`);
+        const channelId = process.env.DISCORD_CHANNEL_ID;
+        if (channelId) {
+            try {
+                discordLogChannel = await client.channels.fetch(channelId);
+                if (!discordLogChannel) {
+                    console.error(`[Discord] ERROR: Could not find channel with ID ${channelId}. Please check the ID.`);
+                } else {
+                    console.log(`[Discord] Successfully found logging channel: #${discordLogChannel.name}`);
+                }
+            } catch (err) {
+                console.error(`[Discord] ERROR: Failed to fetch the channel with ID ${channelId}. Please ensure the ID is correct and the bot has permissions.`, err);
+            }
+        } else {
+            console.warn('[Discord] DISCORD_CHANNEL_ID is not set. Bot status messages will not be sent.');
+        }
+
         const rest = new REST({ version: '10' }).setToken(token);
         try {
             await rest.put(Routes.applicationCommands(client.user.id), { body: commands });
         } catch (error) {
-            console.error('Error refreshing commands:', error);
+            console.error('[Discord] Error refreshing slash commands:', error);
         }
     });
 
@@ -172,15 +188,10 @@ async function initDiscord(state, config) {
 }
 
 function sendMessageToChannel(embed) {
-    const channelId = process.env.DISCORD_CHANNEL_ID;
-    if (!client || !channelId) return;
-
-    const channel = client.channels.cache.get(channelId);
-    if (channel) {
-        channel.send({ embeds: [embed] }).catch(console.error);
-    } else if (!channelWarningLogged) {
-        console.warn(`Could not find Discord channel ID: ${channelId}.`);
-        channelWarningLogged = true;
+    if (discordLogChannel) {
+        discordLogChannel.send({ embeds: [embed] }).catch(err => {
+            console.error('[Discord] Failed to send message to channel:', err);
+        });
     }
 }
 

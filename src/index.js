@@ -99,6 +99,7 @@ server.listen(config.mainDashboardPort, async () => {
 
 // --- Mineflayer Bot Logic ---
 let bot;
+let pluginsInitialized = false;
 
 function createBot() {
   const proxyDetails = proxyManager.getNextProxy();
@@ -136,30 +137,28 @@ function createBot() {
   });
 
   bot.on('spawn', () => {
-    console.log('[Bot] Spawned into the world. Initializing plugins...');
+    console.log('[Bot] Spawned into the world.');
+    if (pluginsInitialized) return;
 
+    console.log('[System] First spawn event. Initializing dashboard plugins...');
     try {
-        console.log(`[Viewer] Initializing viewer on port ${config.viewerPort}...`);
-        viewer(bot, { port: config.viewerPort, firstPerson: false });
-        console.log(`[Viewer] Viewer initialization complete.`);
-    } catch (err) {
-        console.error(`[Viewer] Failed to start viewer:`, err);
-    }
+      console.log(`[Viewer] Initializing viewer on port ${config.viewerPort}...`);
+      viewer(bot, { port: config.viewerPort, firstPerson: false });
+      console.log(`[Viewer] Viewer initialization complete.`);
 
-    try {
-        console.log(`[Inventory] Initializing web inventory on port ${config.inventoryPort}...`);
-        webInventory(bot, { port: config.inventoryPort });
-        console.log(`[Inventory] Web inventory initialization complete.`);
-    } catch (err) {
-        console.error(`[Inventory] Failed to start web inventory:`, err);
-    }
+      console.log(`[Inventory] Initializing web inventory on port ${config.inventoryPort}...`);
+      webInventory(bot, { port: config.inventoryPort });
+      console.log(`[Inventory] Web inventory initialization complete.`);
 
-    try {
-        console.log(`[Radar] Initializing radar on port ${config.radarPort}...`);
-        radar(bot, { port: config.radarPort });
-        console.log(`[Radar] Radar initialization complete.`);
+      console.log(`[Radar] Initializing radar on port ${config.radarPort}...`);
+      radar(bot, { port: config.radarPort });
+      console.log(`[Radar] Radar initialization complete.`);
+
+      pluginsInitialized = true;
+      console.log('[System] All dashboard plugins initialized successfully.');
     } catch (err) {
-        console.error(`[Radar] Failed to start radar:`, err);
+        console.error('[System] CRITICAL: A dashboard plugin failed to start. The bot will exit.', err);
+        process.exit(1);
     }
   });
 
@@ -186,6 +185,7 @@ function createBot() {
   bot.on('end', (reason) => {
     const wasOnline = botState.isOnline;
     botState.isOnline = false;
+    pluginsInitialized = false; // Reset the flag
 
     // Clean up all listeners to prevent memory leaks
     if(bot) bot.removeAllListeners();

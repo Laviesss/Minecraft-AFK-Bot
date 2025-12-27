@@ -36,10 +36,11 @@ async function writeProxies(proxies) {
 
 async function tryValidate(proxy, protocol) {
     const proxyUrl = `${protocol}://${proxy}`;
+    const timeout = parseInt(process.env.PROXY_VALIDATION_TIMEOUT || 20000, 10);
     try {
         const agent = new Agent({ getProxyForUrl: () => proxyUrl });
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 20000); // 20-second timeout
+        const timeoutId = setTimeout(() => controller.abort(), timeout);
 
         const response = await fetch('https://1.1.1.1/cdn-cgi/trace', {
             agent,
