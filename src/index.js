@@ -1,12 +1,13 @@
-require('dotenv').config();
 const mineflayer = require('mineflayer');
 const http = require('http');
 const express = require('express');
 const path = require('path');
 const { createProxyMiddleware } = require('http-proxy-middleware');
 const ngrok = require('ngrok');
+const { Server } = require("socket.io");
 const { initDiscord, sendMessageToChannel, updateBotInstance, EmbedBuilder } = require('./discord');
 const proxyManager = require('./proxyManager');
+const configManager = require('./config');
 
 // --- Plugin Imports ---
 const autoAuth = require('mineflayer-auto-auth');
@@ -14,278 +15,196 @@ const viewer = require('prismarine-viewer').mineflayer;
 const webInventory = require('mineflayer-web-inventory');
 
 // --- Global State ---
-const botState = {
-  isOnline: false,
-  serverAddress: null,
-  dashboardUrl: null,
+let bot;
+let viewerInstance;
+let inventoryInstance;
+let pluginsInitialized = false;
+let botState = {
+    isOnline: false,
+    health: 20,
+    hunger: 20,
+    position: { x: 0, y: 0, z: 0 },
 };
 
-// --- Config ---
-const config = {
-  host: process.env.MC_SERVER_ADDRESS,
-  port: parseInt(process.env.MC_SERVER_PORT || 25565, 10),
-  username: process.env.MC_USERNAME,
-  version: process.env.MC_VERSION,
-  authMethod: process.env.AUTH_METHOD || 'offline',
-  microsoftEmail: process.env.MICROSOFT_EMAIL,
-  admins: (process.env.ADMIN_USERNAMES || '').split(',').filter(Boolean),
-  authPassword: process.env.MC_PASSWORD,
-  mainDashboardPort: parseInt(process.env.PORT || 8080, 10),
-  viewerPort: parseInt(process.env.VIEWER_PORT || 3001, 10),
-  inventoryPort: parseInt(process.env.INVENTORY_PORT || 3002, 10),
-  ngrokAuthToken: process.env.NGROK_AUTH_TOKEN,
-};
-
-// --- Environment Variable Checks ---
-if (!config.host || !config.username) {
-  console.error('Missing required environment variables: MC_SERVER_ADDRESS and MC_USERNAME.');
-  process.exit(1);
-}
-if (config.authMethod === 'microsoft' && !config.microsoftEmail) {
-  console.error('AUTH_METHOD is "microsoft" but MICROSOFT_EMAIL is not set.');
-  process.exit(1);
-}
-if (!config.authPassword) {
-  console.warn('Warning: MC_PASSWORD is not set. The auto-auth plugin will not be able to log in.');
-}
-
-const { Server } = require("socket.io");
-
-// --- Web Server & Reverse Proxy Setup ---
+// --- Main Application ---
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
-// --- Socket.io Event Handlers ---
-io.on('connection', (socket) => {
-  console.log(`[Socket] New connection: ${socket.id}`);
-
-  socket.on('move', (direction) => {
-    console.log(`[Socket] Received move: ${direction}`);
-    if (bot && botState.isOnline) {
-      const correctedDirection = direction === 'backward' ? 'back' : direction;
-      bot.setControlState(correctedDirection, true);
-    }
-  });
-
-  socket.on('stop-move', () => {
-    console.log('[Socket] Received stop-move');
-     if (bot && botState.isOnline) {
-       bot.clearControlStates();
-     }
-  });
-
-  socket.on('toggle-perspective', () => {
-    console.log('[Socket] Received toggle-perspective');
-    if (viewerInstance) {
-      // The viewer exposes a `toggle` function to switch between 1st and 3rd person
-      viewerInstance.toggle();
-    }
-  });
-});
-
-// --- Proxy Error Handler ---
-const onProxyError = (err, req, res) => {
-  console.error('[Proxy] Error:', err);
-  res.writeHead(500, {
-    'Content-Type': 'text/plain',
-  });
-  res.end('Something went wrong. And we are reporting a custom error message.');
-};
-
-// Proxy requests to the plugin servers
-const viewerProxy = createProxyMiddleware({
-    target: `http://localhost:${config.viewerPort}`,
-    ws: true,
-    changeOrigin: true,
-    pathRewrite: { '^/viewer': '' },
-    onError: onProxyError,
-});
-const inventoryProxy = createProxyMiddleware({
-    target: `http://localhost:${config.inventoryPort}`,
-    ws: true,
-    changeOrigin: true,
-    pathRewrite: { '^/inventory': '' },
-    onError: onProxyError,
-});
-
-app.use('/viewer', viewerProxy);
-app.use('/inventory', inventoryProxy);
-
-// Serve the main dashboard file
+app.use(express.json());
 app.use(express.static(path.join(__dirname, '../public')));
 
-server.listen(config.mainDashboardPort, async () => {
-  const localUrl = `http://localhost:${config.mainDashboardPort}`;
-  console.log(`[Dashboard] Main dashboard listening on ${localUrl}`);
-  console.log('[Proxy] Reverse proxy routes for /viewer and /inventory are configured.');
-  botState.dashboardUrl = localUrl;
-
-  if (config.ngrokAuthToken) {
-    console.log('[ngrok] NGROK_AUTH_TOKEN found. Authenticating and starting tunnel...');
-    try {
-      await ngrok.authtoken(config.ngrokAuthToken);
-      const url = await ngrok.connect(config.mainDashboardPort);
-      botState.dashboardUrl = url;
-      console.log(`[ngrok] Tunnel established. Public dashboard is available at: ${url}`);
-    } catch (err) {
-      console.error('---');
-      console.error('[ngrok] CRITICAL ERROR: Could not create ngrok tunnel.');
-      if (err.body && err.body.details && err.body.details.err.includes('authentication failed')) {
-          console.error('[ngrok] Reason: Your NGROK_AUTH_TOKEN is invalid or expired. Please check it on dash.ngrok.com');
-      } else if (err.code === 'ECONNREFUSED') {
-          console.error('[ngrok] Reason: The connection was refused. This is often caused by antivirus software or a firewall blocking Node.js.');
-          console.error('[ngrok] Action: Please check your firewall/antivirus settings and allow Node.js to make local connections.');
-      } else {
-          console.error('[ngrok] An unexpected error occurred:', err);
-      }
-      console.error(`[ngrok] The bot will continue to run, but the public dashboard will not be available.`);
-      console.error(`[ngrok] You can still access the local dashboard at: ${localUrl}`);
-      console.error('---');
-    }
-  } else {
-    console.log('[ngrok] NGROK_AUTH_TOKEN not found in .env file. Skipping public tunnel.');
-  }
+// --- API Endpoints ---
+app.get('/api/status', async (req, res) => {
+    res.json({ configured: await configManager.isConfigured() });
 });
 
+app.post('/api/setup', async (req, res) => {
+    if (await configManager.saveConfig(req.body)) {
+        res.json({ success: true });
+        console.log('[System] Config saved. Restarting...');
+        setTimeout(() => process.exit(0), 1000);
+    } else {
+        res.status(500).json({ success: false, message: 'Failed to save config.' });
+    }
+});
 
-// --- Mineflayer Bot Logic ---
-let bot;
-let pluginsInitialized = false;
-let viewerInstance;
-let inventoryInstance;
+// --- Main Start Function ---
+async function start() {
+    console.log('[System] Starting application...');
+    if (await configManager.isConfigured()) {
+        startFullApplication();
+    } else {
+        startWebServerOnly();
+    }
+}
+
+// --- Startup Modes ---
+function startWebServerOnly() {
+    server.listen(process.env.PORT || 8080, () => {
+        console.log(`[Dashboard] Setup server listening on http://localhost:${process.env.PORT || 8080}`);
+    });
+}
+
+async function startFullApplication() {
+    const config = await configManager.loadConfig();
+    if (!config) {
+        console.error('[System] CRITICAL: Failed to load configuration.');
+        return;
+    }
+
+    setupProxies(config);
+    server.listen(config.mainDashboardPort || 8080, () => {
+        const localUrl = `http://localhost:${config.mainDashboardPort || 8080}`;
+        console.log(`[Dashboard] Main dashboard listening on ${localUrl}`);
+        startNgrok(config, localUrl);
+    });
+
+    initDiscord(botState, config);
+    createBot(config);
+}
+
+// --- Helper Functions ---
+function setupProxies(config) {
+    const onProxyError = (err, req, res) => {
+        console.error('[Proxy] Error:', err);
+        res.writeHead(500).end('Proxy error.');
+    };
+    app.use('/viewer', createProxyMiddleware({ target: `http://localhost:${config.viewerPort || 3001}`, ws: true, changeOrigin: true, pathRewrite: { '^/viewer': '' }, onError: onProxyError }));
+    app.use('/inventory', createProxyMiddleware({ target: `http://localhost:${config.inventoryPort || 3002}`, ws: true, changeOrigin: true, pathRewrite: { '^/inventory': '' }, onError: onProxyError }));
+}
+
+async function startNgrok(config, localUrl) {
+    if (config.ngrokAuthToken) {
+        console.log('[ngrok] NGROK_AUTH_TOKEN found. Starting tunnel...');
+        try {
+            await ngrok.kill();
+            await ngrok.authtoken(config.ngrokAuthToken);
+            const url = await ngrok.connect(config.mainDashboardPort || 8080);
+            botState.dashboardUrl = url;
+            console.log(`[ngrok] Tunnel established at: ${url}`);
+        } catch (err) {
+            console.error('[ngrok] CRITICAL ERROR:', err.message);
+            botState.dashboardUrl = localUrl;
+        }
+    }
+}
 
 function shutdownPlugins() {
-    if (viewerInstance) {
-        console.log('[Viewer] Closing viewer server...');
-        viewerInstance.close();
-        viewerInstance = null;
-    }
-    if (inventoryInstance) {
-        console.log('[Inventory] Closing inventory server...');
-        inventoryInstance.close();
-        inventoryInstance = null;
-    }
+    if (viewerInstance) viewerInstance.close();
+    if (inventoryInstance) inventoryInstance.close();
+    viewerInstance = inventoryInstance = null;
     pluginsInitialized = false;
 }
 
-function createBot() {
-  const proxyDetails = proxyManager.getNextProxy();
-  console.log(`Connecting to ${config.host}:${config.port} as ${config.username}...`);
-
-  const botOptions = {
-    host: config.host,
-    port: config.port,
-    username: config.authMethod === 'microsoft' ? config.microsoftEmail : config.username,
-    auth: config.authMethod,
-    version: config.version || false,
-    checkTimeoutInterval: 30 * 1000,
-    plugins: [
-      {
-        plugin: autoAuth,
-        options: {
-          password: config.authPassword,
-          login: `/login ${config.authPassword}`,
-          register: `/register ${config.authPassword} ${config.authPassword}`,
-        }
-      }
-    ]
-  };
-  if (proxyDetails) botOptions.agent = proxyDetails.agent;
-
-  bot = mineflayer.createBot(botOptions);
-  updateBotInstance(bot);
-
-  // --- Bot Event Handlers ---
-  bot.on('login', () => {
-    console.log(`[Bot] Logged in as '${bot.username}'${bot.socket ? ` to ${bot.socket.remoteAddress}` : ''}.`);
-    botState.isOnline = true;
-    const embed = new EmbedBuilder().setColor(0x55FF55).setTitle('✅ Bot Connected').setDescription(`Successfully connected to \`${config.host}\` as \`${bot.username}\`.`);
-    sendMessageToChannel(embed);
-  });
-
-  bot.on('spawn', () => {
-    console.log('[Bot] Spawned into the world.');
-    if (pluginsInitialized) return;
-
-    console.log('[System] First spawn event. Initializing dashboard plugins...');
-    try {
-      console.log(`[Viewer] Initializing viewer on port ${config.viewerPort}...`);
-      viewerInstance = viewer(bot, { port: config.viewerPort, firstPerson: false });
-      console.log(`[Viewer] Viewer initialization complete.`);
-
-      console.log(`[Inventory] Initializing web inventory on port ${config.inventoryPort}...`);
-      inventoryInstance = webInventory(bot, { port: config.inventoryPort });
-      console.log(`[Inventory] Web inventory initialization complete.`);
-
-      pluginsInitialized = true;
-      console.log('[System] All dashboard plugins initialized successfully.');
-    } catch (err) {
-        console.error('[System] CRITICAL: A dashboard plugin failed to start. The bot will exit.', err);
-        process.exit(1);
-    }
-  });
-
-  bot.on('kicked', (reason) => {
-    let reasonText = reason;
-    try {
-      const reasonObj = JSON.parse(reason);
-      reasonText = reasonObj.text || reason;
-      if (reasonObj.extra) {
-          reasonText += reasonObj.extra.map(item => item.text).join('');
-      }
-    } catch (e) { /* Not JSON */ }
-    console.warn(`[Bot] Kicked from server. Reason: ${reasonText}`);
-    const embed = new EmbedBuilder().setColor(0xFF5555).setTitle('‼️ Bot Kicked').setDescription(`**Reason:** \`\`\`${reasonText}\`\`\``);
-    sendMessageToChannel(embed);
-  });
-
-  bot.on('error', (err) => {
-    // An error event is not always fatal. We will let the 'end' event handle reconnection.
-    console.error('[Bot] A non-fatal error occurred:', err);
-  });
-
-  bot.on('end', (reason) => {
-    console.log(`[Bot] Disconnected. Reason: ${reason}. Attempting to reconnect in 10 seconds...`);
-    botState.isOnline = false;
-
-    // Clean up all resources
-    shutdownPlugins();
-    if(bot) bot.removeAllListeners();
-
-    const embed = new EmbedBuilder()
-        .setColor(0xFFA500)
-        .setTitle('⚠️ Bot Disconnected')
-        .setDescription(`**Reason:** ${reason}. Reconnecting in 10s...`);
-    sendMessageToChannel(embed);
-
-    // Attempt to reconnect
-    setTimeout(createBot, 10000);
-  });
+function createBot(config) {
+    console.log(`[Bot] Connecting to ${config.serverAddress}:${config.serverPort}...`);
+    bot = mineflayer.createBot({
+        host: config.serverAddress,
+        port: parseInt(config.serverPort, 10),
+        username: config.authMethod === 'microsoft' ? config.microsoftEmail : config.botUsername,
+        auth: config.authMethod,
+        version: config.serverVersion || false,
+        plugins: [{ plugin: autoAuth, options: { password: config.serverPassword } }],
+    });
+    updateBotInstance(bot);
+    attachBotListeners(config);
 }
+
+function attachBotListeners(config) {
+    bot.on('login', () => {
+        console.log(`[Bot] Logged in as '${bot.username}'.`);
+        botState.isOnline = true;
+    });
+
+    bot.on('spawn', () => {
+        console.log('[Bot] Spawned into world.');
+        if (pluginsInitialized) return;
+        try {
+            console.log('[System] Initializing plugins...');
+            viewerInstance = viewer(bot, { port: config.viewerPort || 3001, firstPerson: false });
+            inventoryInstance = webInventory(bot, { port: config.inventoryPort || 3002 });
+            pluginsInitialized = true;
+        } catch (err) {
+            console.error('[System] CRITICAL: Plugin initialization failed. Exiting.', err);
+            process.exit(1);
+        }
+    });
+
+    bot.on('end', (reason) => {
+        console.log(`[Bot] Disconnected. Reason: ${reason}. Reconnecting in 10s...`);
+        botState.isOnline = false;
+        shutdownPlugins();
+        if(bot) bot.removeAllListeners();
+        setTimeout(() => createBot(config), 10000);
+    });
+
+    bot.on('health', () => {
+        botState.health = bot.health;
+        botState.hunger = bot.food;
+    });
+
+    bot.on('move', () => {
+        botState.position = bot.entity.position.floored();
+    });
+
+    bot.on('chat', (username, message) => {
+        if (username === bot.username) return;
+        io.emit('chat-message', { message: `<${username}> ${message}` });
+    });
+
+    bot.on('error', (err) => console.error('[Bot] A non-fatal error occurred:', err.message));
+
+    // Periodically send state to the dashboard
+    setInterval(() => io.emit('bot-state', botState), 1000);
+}
+
+// --- Socket.IO Listeners ---
+io.on('connection', (socket) => {
+    console.log(`[Socket] New connection: ${socket.id}`);
+    socket.emit('bot-state', botState); // Send initial state
+
+    socket.on('send-chat-message', ({ message }) => {
+        if (bot && botState.isOnline && message) bot.chat(message);
+    });
+
+    socket.on('toggle-perspective', () => {
+        if (viewerInstance) viewerInstance.toggle();
+    });
+
+    socket.on('move', ({ direction }) => {
+        if (bot && botState.isOnline) bot.setControlState(direction, true);
+    });
+
+    socket.on('stop-move', () => {
+        if (bot && botState.isOnline) bot.clearControlStates();
+    });
+});
 
 // --- Graceful Shutdown ---
-async function shutdown() {
-  console.log('[System] Shutting down...');
-  if (config.ngrokAuthToken) {
-    console.log('[ngrok] Disconnecting tunnel...');
-    await ngrok.disconnect();
-    console.log('[ngrok] Tunnel disconnected.');
-  }
-  process.exit(0);
-}
-process.on('SIGINT', shutdown);
-process.on('SIGTERM', shutdown);
-
-
-// --- Initial Setup ---
-async function start() {
-  // Forcefully terminate any lingering ngrok processes on startup
-  await ngrok.kill();
-
-  await proxyManager.initialize();
-  initDiscord(botState, config);
-  createBot();
-}
+process.on('SIGINT', async () => {
+    await ngrok.kill();
+    process.exit(0);
+});
 
 start();
