@@ -1,3 +1,4 @@
+require('dotenv').config();
 const mineflayer = require('mineflayer');
 const http = require('http');
 const express = require('express');
@@ -5,7 +6,7 @@ const path = require('path');
 const { createProxyMiddleware } = require('http-proxy-middleware');
 const ngrok = require('ngrok');
 const { Server } = require("socket.io");
-const { initDiscord, sendMessageToChannel, updateBotInstance, EmbedBuilder } = require('./discord');
+const { initDiscord, setDiscordChannel, sendMessageToChannel, updateBotInstance, EmbedBuilder, getClient: getDiscordClient } = require('./discord');
 const proxyManager = require('./proxyManager');
 const configManager = require('./config');
 
@@ -49,9 +50,21 @@ app.post('/api/setup', async (req, res) => {
     }
 });
 
+app.get('/api/discord/invite', (req, res) => {
+    const discordClient = getDiscordClient();
+    if (discordClient && discordClient.isReady()) {
+        const inviteLink = `https://discord.com/oauth2/authorize?client_id=${discordClient.user.id}&permissions=2147485696&scope=bot%20applications.commands`;
+        res.json({ inviteLink });
+    } else {
+        res.status(503).json({ error: 'Discord bot not ready or disabled.' });
+    }
+});
+
 // --- Main Start Function ---
 async function start() {
     console.log('[System] Starting application...');
+    await initDiscord(botState); // Initialize Discord immediately
+
     if (await configManager.isConfigured()) {
         startFullApplication();
     } else {
@@ -73,6 +86,7 @@ async function startFullApplication() {
         return;
     }
 
+    setDiscordChannel(config); // Set the channel now that we have the config
     setupProxies(config);
     server.listen(config.mainDashboardPort || 8080, () => {
         const localUrl = `http://localhost:${config.mainDashboardPort || 8080}`;
@@ -80,7 +94,6 @@ async function startFullApplication() {
         startNgrok(config, localUrl);
     });
 
-    initDiscord(botState, config);
     createBot(config);
 }
 

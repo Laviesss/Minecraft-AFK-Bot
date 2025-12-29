@@ -43,8 +43,12 @@ async function loadConfig() {
  */
 async function saveConfig(configData) {
     try {
-        await fs.writeFile(CONFIG_PATH, JSON.stringify(configData, null, 2));
-        currentConfig = configData; // Update in-memory cache
+        // The token is now managed by environment variables, so we ensure it's not saved in the config file.
+        const { discordToken, ...configToSave } = configData;
+        await fs.writeFile(CONFIG_PATH, JSON.stringify(configToSave, null, 2));
+
+        // The in-memory config should reflect what's saved.
+        currentConfig = configToSave;
         return true;
     } catch (err) {
         console.error('[Config] Error saving bot-config.json:', err);

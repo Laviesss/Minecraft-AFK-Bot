@@ -4,12 +4,13 @@ This project provides a powerful, feature-rich Minecraft AFK bot built with Node
 
 ## ✨ Features
 
+- **Configuration Wizard:** A user-friendly, web-based wizard for initial bot setup. No more manual file editing to get started!
 - **Unified Web Dashboard:** Access all web-based tools from a single, clean interface.
 - **🌐 3D World Viewer:** See what the bot sees with a live, in-browser 3D render of the world (`prismarine-viewer`).
 - **📦 Live Inventory Management:** View and manage the bot's inventory directly from the web dashboard (`mineflayer-web-inventory`).
 - **🏃‍♂️ Movement Controls:** Control the bot's movement directly from the web dashboard and Discord.
 - **🔒 Flexible Authentication:** Supports both `microsoft` (premium) and `offline` (cracked) server authentication.
-- **🔔 Discord Integration:** Get real-time notifications about bot status (connects, disconnects, kicks) in your Discord server.
+- **🔔 Discord Integration:** Get real-time notifications and control the bot via slash commands in your Discord server.
 - **🛡️ Proxy Support:** Connect through a SOCKS5 proxy by adding your proxies to the `proxies.txt` file.
 - **🚀 Ngrok Tunneling:** Automatically creates a secure public URL for your local dashboard, making it easy to share or access from anywhere.
 
@@ -17,14 +18,15 @@ This project provides a powerful, feature-rich Minecraft AFK bot built with Node
 
 ## 🚀 Getting Started
 
-Follow these instructions to get the bot up and running on your local machine.
+This application uses a web-based setup wizard, so you don't need to manually create any configuration files.
 
 ### Prerequisites
 
 - **Node.js:** Version 22.0.0 or higher is required. You can download it from [nodejs.org](https://nodejs.org/).
 - **Git:** Required to clone the repository.
+- **(Optional) Discord Bot Token:** If you plan to use the Discord integration, you will need to have a Discord bot token set as an environment variable.
 
-### Installation & Setup
+### Installation & First-Time Setup
 
 **1. Clone the Repository:**
 ```bash
@@ -37,46 +39,37 @@ cd your-repo-name
 npm install
 ```
 
-**3. Configure the Bot:**
-Create a configuration file by copying the example file:
-```bash
-cp .env.example .env
+**3. (Optional) Set Discord Token:**
+If you want to enable the Discord bot, set the `DISCORD_TOKEN` environment variable. You can do this by creating a `.env` file in the project root:
 ```
-Now, open the `.env` file with a text editor and fill in the required details.
+DISCORD_TOKEN=your_super_secret_discord_bot_token
+```
+The application will automatically load this variable.
 
----
-
-## ⚙️ Configuration (`.env` file)
-
-All configuration is done in the `.env` file. Here is a breakdown of all the available variables.
-
-| Variable | Required | Description |
-| :--- | :---: | :--- |
-| `MC_SERVER_ADDRESS` | **Yes** | The IP address or domain of the Minecraft server. |
-| `MC_SERVER_PORT` | No | The port of the server. Defaults to `25565`. |
-| `MC_VERSION` | No | The Minecraft version. Auto-detected if left blank. |
-| `AUTH_METHOD` | **Yes** | Set to `microsoft` for premium accounts or `offline` for cracked servers. |
-| `MC_USERNAME` | **Yes*** | *Required if `AUTH_METHOD` is `offline`.* The bot's in-game username. |
-| `MC_PASSWORD` | No | The password for your server's `/login` command. **This is NOT your Microsoft password.** |
-| `MICROSOFT_EMAIL` | **Yes*** | *Required if `AUTH_METHOD` is `microsoft`.* The email for your Microsoft account. A browser window will open for you to sign in securely on the first run. |
-| `ADMIN_USERNAMES` | No | A comma-separated list of Minecraft usernames that can issue admin commands to the bot. |
-| `DISCORD_BOT_TOKEN` | No | The token for your Discord bot to enable notifications. |
-| `DISCORD_CHANNEL_ID` | No | The ID of the Discord channel where notifications will be sent. |
-| `NGROK_AUTH_TOKEN` | No | Your auth token from [ngrok.com](https://ngrok.com/). If provided, a public URL for your dashboard will be generated on startup. |
-| `PORT` | No | The main port for the web dashboard. Defaults to `8080`. |
-
----
-
-## ▶️ Running the Bot
-
-Once you have configured your `.env` file, you can start the bot with a single command:
-
+**4. Run the Application:**
 ```bash
 npm start
 ```
 
-The console will display logs, including the local (and ngrok, if configured) URL for the dashboard.
+**5. Complete the Web Setup:**
+- When you first run the application, it will start in **setup mode**.
+- Open your browser and navigate to the URL shown in the console (usually `http://localhost:8080`).
+- Follow the on-screen instructions in the **Setup Wizard** to configure your bot.
+- Once you save the configuration, the application will automatically restart in **full mode**.
 
-## ☁️ Deployment
+---
 
-This bot is designed to be deployed on cloud platforms like [Render](https://render.com/). The included `Procfile` and the `start` script in `package.json` ensure that the application builds and runs correctly in a production environment. Simply link your Git repository to a new web service on Render to deploy.
+## ⚙️ Configuration
+
+After the initial setup, the bot's configuration is stored in a `bot-config.json` file. You can edit this file directly or delete it to run the Setup Wizard again.
+
+### Discord Integration Setup
+
+The Discord integration is now easier than ever:
+1.  **Bot Owner:** The owner of the bot application must set the `DISCORD_TOKEN` as an environment variable on the server where the bot is running.
+2.  **User:** During the web-based setup, the Discord step will provide you with an **invite link**.
+3.  Click the link to invite the pre-configured bot to your server.
+4.  In Discord, right-click the channel where you want the bot to send messages and click **"Copy Channel ID"**.
+5.  Paste this ID into the "Channel ID" field in the setup wizard.
+
+That's it! You no longer need to create and manage your own Discord bot application.

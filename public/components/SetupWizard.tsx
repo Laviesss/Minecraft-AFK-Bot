@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BotConfig, AuthMethod } from '../types';
-import { Server, Shield, MessageSquare, Loader2, ChevronRight, ChevronLeft, CheckCircle2 } from 'lucide-react';
+import { Server, Shield, MessageSquare, Loader2, ChevronRight, ChevronLeft, CheckCircle2, Link } from 'lucide-react';
 
 interface SetupWizardProps {
   onComplete: () => void;
@@ -10,6 +10,7 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [inviteLink, setInviteLink] = useState<string | null>(null);
   const [config, setConfig] = useState<BotConfig>({
     serverAddress: '',
     serverPort: 25565,
@@ -17,9 +18,29 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
     authMethod: 'Offline',
     microsoftEmail: '',
     serverPassword: '',
-    discordToken: '',
     discordChannelId: '',
   });
+
+  useEffect(() => {
+    // Fetch the Discord invite link when the component mounts and the step is 3
+    if (step === 3) {
+      const fetchInvite = async () => {
+        try {
+          const res = await fetch('/api/discord/invite');
+          if (res.ok) {
+            const data = await res.json();
+            setInviteLink(data.inviteLink);
+          } else {
+            setInviteLink(null);
+          }
+        } catch (e) {
+          console.error("Failed to fetch invite link", e);
+          setInviteLink(null);
+        }
+      };
+      fetchInvite();
+    }
+  }, [step]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -158,27 +179,29 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
               <h3 className="text-xl font-semibold text-white">Discord Integration (Optional)</h3>
             </div>
             <div className="space-y-4">
+              {inviteLink ? (
+                <div className="p-4 bg-zinc-800/50 border border-zinc-700/50 rounded-lg">
+                  <label className="block text-sm font-medium text-zinc-400 mb-2">1. Invite the Bot</label>
+                  <a href={inviteLink} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 w-full justify-center px-4 py-2 bg-blue-500 text-white rounded-lg font-bold hover:bg-blue-600 transition-all">
+                    <Link className="w-4 h-4" /> Invite Bot to Server
+                  </a>
+                </div>
+              ) : (
+                 <div className="p-4 bg-zinc-800/50 border border-zinc-700/50 rounded-lg text-center">
+                    <p className="text-sm text-zinc-500">Discord integration is not available. The bot owner has not configured a Discord token.</p>
+                 </div>
+              )}
               <div>
-                <label className="block text-sm font-medium text-zinc-400 mb-1">Bot Token</label>
-                <input
-                  type="password"
-                  name="discordToken"
-                  value={config.discordToken}
-                  onChange={handleChange}
-                  placeholder="MTIzNDU2..."
-                  className="w-full bg-zinc-900/50 border border-zinc-700/50 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all backdrop-blur-sm"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-zinc-400 mb-1">Channel ID</label>
+                <label className="block text-sm font-medium text-zinc-400 mb-1">2. Channel or User ID</label>
                 <input
                   type="text"
                   name="discordChannelId"
                   value={config.discordChannelId}
                   onChange={handleChange}
-                  placeholder="9876543210..."
+                  placeholder="Paste Channel or User ID here"
                   className="w-full bg-zinc-900/50 border border-zinc-700/50 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all backdrop-blur-sm"
                 />
+                 <p className="mt-2 text-xs text-zinc-500">Right-click a channel or user in Discord and select "Copy ID".</p>
               </div>
             </div>
           </div>
