@@ -34,6 +34,18 @@ const io = new Server(server, { path: '/socket.io' });
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '../public')));
 
+// Serve the correct dashboard based on the environment variable
+app.get('/', (req, res) => {
+    console.log(`[Server] Handling request. DASHBOARD_MODE is currently: '${process.env.DASHBOARD_MODE}'`);
+    if (process.env.DASHBOARD_MODE === 'simple') {
+        console.log('[Server] Serving simple.html');
+        res.sendFile(path.join(__dirname, '../public/simple.html'));
+    } else {
+        console.log('[Server] Serving index.html');
+        res.sendFile(path.join(__dirname, '../public/index.html'));
+    }
+});
+
 // --- API Endpoints ---
 app.get('/api/status', async (req, res) => {
     res.json({ configured: await configManager.isConfigured() });

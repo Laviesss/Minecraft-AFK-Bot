@@ -5,11 +5,44 @@ const CONFIG_PATH = path.join(__dirname, '..', 'bot-config.json');
 
 let currentConfig = null;
 
-/**
- * Checks if the bot configuration file exists.
- * @returns {Promise<boolean>}
- */
+function isDeveloperMode() {
+    // Developer mode is triggered by the presence of the MINECRAFT_HOST variable.
+    return !!process.env.MINECRAFT_HOST;
+}
+
+function loadDevConfig() {
+    console.log('[Config] Developer mode detected. Loading configuration from .env file.');
+
+    const host = process.env.MINECRAFT_HOST;
+    const username = process.env.MINECRAFT_USERNAME;
+
+    if (!host || !username) {
+        console.error('[Config] CRITICAL: Missing required environment variables for developer mode.');
+        console.error('[Config] Please ensure MINECRAFT_HOST and MINECRAFT_USERNAME are set in your .env file.');
+        return null;
+    }
+
+    return {
+        serverAddress: host,
+        serverPort: process.env.MINECRAFT_PORT || '25565',
+        serverVersion: process.env.MINECRAFT_VERSION || false,
+        authMethod: process.env.AUTH_METHOD || 'mojang',
+        microsoftEmail: process.env.MICROSOFT_EMAIL,
+        botUsername: username,
+        serverPassword: process.env.SERVER_PASSWORD || null,
+        adminUsernames: [],
+        useProxy: false,
+        discordToken: process.env.DISCORD_TOKEN,
+        discordChannelId: process.env.DISCORD_CHANNEL_ID,
+        mainDashboardPort: process.env.MAIN_DASHBOARD_PORT || 8080,
+        viewerPort: process.env.VIEWER_PORT || 3001,
+        inventoryPort: process.env.INVENTORY_PORT || 3002,
+        dashboardMode: process.env.DASHBOARD_MODE || 'full',
+    };
+}
+
 async function isConfigured() {
+    if (isDeveloperMode()) return true;
     try {
         await fs.access(CONFIG_PATH);
         return true;
@@ -18,12 +51,14 @@ async function isConfigured() {
     }
 }
 
-/**
- * Loads the configuration from bot-config.json.
- * @returns {Promise<object|null>}
- */
 async function loadConfig() {
     if (currentConfig) return currentConfig;
+
+    if (isDeveloperMode()) {
+        currentConfig = loadDevConfig();
+        return currentConfig;
+    }
+
     if (!(await isConfigured())) return null;
 
     try {
@@ -36,18 +71,10 @@ async function loadConfig() {
     }
 }
 
-/**
- * Saves the given configuration to bot-config.json.
- * @param {object} configData
- * @returns {Promise<boolean>}
- */
 async function saveConfig(configData) {
     try {
-        // The token is now managed by environment variables, so we ensure it's not saved in the config file.
         const { discordToken, ...configToSave } = configData;
         await fs.writeFile(CONFIG_PATH, JSON.stringify(configToSave, null, 2));
-
-        // The in-memory config should reflect what's saved.
         currentConfig = configToSave;
         return true;
     } catch (err) {
@@ -60,4 +87,5 @@ module.exports = {
     isConfigured,
     loadConfig,
     saveConfig,
+    isDeveloperMode,
 };
