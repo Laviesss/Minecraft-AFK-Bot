@@ -12,7 +12,7 @@ const configManager = require('./config');
 
 // --- Plugin Imports ---
 const autoAuth = require('mineflayer-auto-auth');
-const viewer = require('prismarine-viewer').mineflayer;
+const { mineflayer: viewer } = require('prismarine-viewer');
 const webInventory = require('mineflayer-web-inventory');
 
 // --- Global State ---
@@ -30,7 +30,7 @@ let botState = {
 // --- Main Application ---
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server);
+const io = new Server(server, { path: '/socket.io' });
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '../public')));
@@ -86,10 +86,12 @@ async function startFullApplication() {
         return;
     }
 
-    setDiscordChannel(config); // Set the channel now that we have the config
-    setupProxies(config);
-    server.listen(config.mainDashboardPort || 8080, () => {
-        const localUrl = `http://localhost:${config.mainDashboardPort || 8080}`;
+    setDiscordChannel(config);
+    setupProxies(config); // Re-add the proxy setup
+
+    const mainPort = config.mainDashboardPort || 8080;
+    server.listen(mainPort, () => {
+        const localUrl = `http://localhost:${mainPort}`;
         console.log(`[Dashboard] Main dashboard listening on ${localUrl}`);
         startNgrok(config, localUrl);
     });
@@ -99,12 +101,31 @@ async function startFullApplication() {
 
 // --- Helper Functions ---
 function setupProxies(config) {
+    const viewerPort = config.viewerPort || 3001;
+    const inventoryPort = config.inventoryPort || 3002;
+
     const onProxyError = (err, req, res) => {
-        console.error('[Proxy] Error:', err);
+        console.error(`[Proxy] Error for ${req.url}:`, err);
         res.writeHead(500).end('Proxy error.');
     };
-    app.use('/viewer', createProxyMiddleware({ target: `http://localhost:${config.viewerPort || 3001}`, ws: true, changeOrigin: true, pathRewrite: { '^/viewer': '' }, onError: onProxyError }));
-    app.use('/inventory', createProxyMiddleware({ target: `http://localhost:${config.inventoryPort || 3002}`, ws: true, changeOrigin: true, pathRewrite: { '^/inventory': '' }, onError: onProxyError }));
+
+    app.use('/viewer', createProxyMiddleware({
+        target: `http://localhost:${viewerPort}`,
+        ws: true,
+        changeOrigin: true,
+        pathRewrite: { '^/viewer': '' },
+        onError: onProxyError,
+        logLevel: 'debug',
+    }));
+
+    app.use('/inventory', createProxyMiddleware({
+        target: `http://localhost:${inventoryPort}`,
+        ws: true,
+        changeOrigin: true,
+        pathRewrite: { '^/inventory': '' },
+        onError: onProxyError,
+        logLevel: 'debug',
+    }));
 }
 
 async function startNgrok(config, localUrl) {
@@ -140,6 +161,23 @@ function createBot(config) {
         version: config.serverVersion || false,
         plugins: [{ plugin: autoAuth, options: { password: config.serverPassword } }],
     });
+
+    bot.once('spawn', () => {
+        console.log('[Bot] Spawn event fired. Initializing plugins...');
+        if (pluginsInitialized) return;
+        try {
+            const viewerPort = config.viewerPort || 3001;
+            const inventoryPort = config.inventoryPort || 3002;
+            viewer(bot, { port: viewerPort, firstPerson: false });
+            inventoryInstance = webInventory(bot, { port: inventoryPort });
+            pluginsInitialized = true;
+            console.log('[System] Plugins initialized successfully.');
+        } catch (err) {
+            console.error('[System] CRITICAL: Plugin initialization failed. Exiting.', err);
+            process.exit(1);
+        }
+    });
+
     updateBotInstance(bot);
     attachBotListeners(config);
 }
@@ -150,20 +188,6 @@ function attachBotListeners(config) {
         botState.isOnline = true;
     });
 
-    bot.on('spawn', () => {
-        console.log('[Bot] Spawned into world.');
-        if (pluginsInitialized) return;
-        try {
-            console.log('[System] Initializing plugins...');
-            viewerInstance = viewer(bot, { port: config.viewerPort || 3001, firstPerson: false });
-            inventoryInstance = webInventory(bot, { port: config.inventoryPort || 3002 });
-            pluginsInitialized = true;
-        } catch (err) {
-            console.error('[System] CRITICAL: Plugin initialization failed. Exiting.', err);
-            process.exit(1);
-        }
-    });
-
     bot.on('end', (reason) => {
         console.log(`[Bot] Disconnected. Reason: ${reason}. Reconnecting in 10s...`);
         botState.isOnline = false;
@@ -172,24 +196,19 @@ function attachBotListeners(config) {
         setTimeout(() => createBot(config), 10000);
     });
 
-    bot.on('health', () => {
-        botState.health = bot.health;
-        botState.hunger = bot.food;
-    });
-
-    bot.on('move', () => {
-        botState.position = bot.entity.position.floored();
-    });
-
-    bot.on('chat', (username, message) => {
-        if (username === bot.username) return;
-        io.emit('chat-message', { message: `<${username}> ${message}` });
-    });
-
-    bot.on('error', (err) => console.error('[Bot] A non-fatal error occurred:', err.message));
+    bot.on('error', (err) => console.error('[Bot] A non-fatal error occurred:', err));
+    bot.on('kicked', (reason) => console.log('[Bot] Kicked from server. Reason:', reason));
 
     // Periodically send state to the dashboard
-    setInterval(() => io.emit('bot-state', botState), 1000);
+    setInterval(() => {
+        if (!bot || !botState.isOnline) return;
+        botState.health = bot.health;
+        botState.hunger = bot.food;
+        if (bot.entity) {
+            botState.position = bot.entity.position.floored();
+        }
+        io.emit('bot-state', botState)
+    }, 1000);
 }
 
 // --- Socket.IO Listeners ---
@@ -202,7 +221,7 @@ io.on('connection', (socket) => {
     });
 
     socket.on('toggle-perspective', () => {
-        if (viewerInstance) viewerInstance.toggle();
+        if (bot && bot.viewer) bot.viewer.toggle();
     });
 
     socket.on('move', ({ direction }) => {

@@ -1,0 +1,9 @@
+{
+  "serverAddress": "us.mineplex.com",
+  "serverPort": 25565,
+  "botUsername": "Botty",
+  "authMethod": "Offline",
+  "microsoftEmail": "",
+  "serverPassword": "",
+  "discordChannelId": ""
+}
