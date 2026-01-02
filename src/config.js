@@ -6,20 +6,29 @@ const CONFIG_PATH = path.join(__dirname, '..', 'bot-config.json');
 let currentConfig = null;
 
 function isDeveloperMode() {
-    // Check for the specific mode flag which is the source of truth for developer mode.
-    return process.env.DASHBOARD_MODE === 'simple';
+    // Developer mode is triggered by the presence of the MINECRAFT_HOST variable.
+    return !!process.env.MINECRAFT_HOST;
 }
 
 function loadDevConfig() {
     console.log('[Config] Developer mode detected. Loading configuration from .env file.');
 
+    const host = process.env.MINECRAFT_HOST;
+    const username = process.env.MINECRAFT_USERNAME;
+
+    if (!host || !username) {
+        console.error('[Config] CRITICAL: Missing required environment variables for developer mode.');
+        console.error('[Config] Please ensure MINECRAFT_HOST and MINECRAFT_USERNAME are set in your .env file.');
+        return null;
+    }
+
     return {
-        serverAddress: process.env.MINECRAFT_HOST,
+        serverAddress: host,
         serverPort: process.env.MINECRAFT_PORT || '25565',
         serverVersion: process.env.MINECRAFT_VERSION || false,
-        authMethod: process.env.AUTH_METHOD || 'mojang', // Default to mojang for dev mode
-        microsoftEmail: null, // Not used in mojang auth
-        botUsername: process.env.MINECRAFT_USERNAME,
+        authMethod: process.env.AUTH_METHOD || 'mojang',
+        microsoftEmail: process.env.MICROSOFT_EMAIL,
+        botUsername: username,
         serverPassword: process.env.SERVER_PASSWORD || null,
         adminUsernames: [],
         useProxy: false,

@@ -12,6 +12,7 @@ const { mineflayer: viewer } = require('prismarine-viewer');
 const webInventory = require('mineflayer-web-inventory');
 
 let bot;
+let inventoryInstance;
 let pluginsInitialized = false;
 let botState = { isOnline: false, health: 20, hunger: 20, position: { x: 0, y: 0, z: 0 } };
 
@@ -71,7 +72,7 @@ function createBot(config) {
         if (pluginsInitialized) return;
         try {
             viewer(bot, { port: config.viewerPort || 3001, firstPerson: false });
-            webInventory(bot, { port: config.inventoryPort || 3002 });
+            inventoryInstance = webInventory(bot, { port: config.inventoryPort || 3002 });
             pluginsInitialized = true;
         } catch (err) {
             console.error('[System] CRITICAL: Plugin initialization failed.', err);
@@ -80,7 +81,7 @@ function createBot(config) {
 
     bot.on('messagestr', (message) => message.trim() && io.emit('chat-message', { message }));
     bot.on('kicked', (reason) => console.log('[Bot] Kicked. Reason:', reason));
-    bot.on('error', (err) => console.error('[Bot] A non-fatal error occurred:', err.code));
+    bot.on('error', (err) => console.error('[Bot] A non-fatal error occurred:', err));
 
     bot.on('end', (reason) => {
         console.log(`[Bot] Disconnected. Reason: ${reason}. Reconnecting in 10s...`);
@@ -95,7 +96,7 @@ io.on('connection', (socket) => {
     socket.on('send-chat-message', ({ message }) => bot && botState.isOnline && bot.chat(message));
     socket.on('toggle-perspective', () => bot && bot.viewer && bot.viewer.toggle());
     socket.on('move', ({ direction }) => bot && bot.setControlState(direction, true));
-    socket.on('stop-move', ({ direction }) => bot && bot.setControlState(direction, false));
+    socket.on('stop-move', () => bot && bot.clearControlStates());
 });
 
 // Gracefully shutdown plugins
@@ -104,7 +105,11 @@ function shutdownPlugins() {
         bot.viewer.close();
         console.log('[Viewer] Server closed.');
     }
-    // mineflayer-web-inventory does not have a close method, so we just lose the reference.
+    if (inventoryInstance) {
+        inventoryInstance.close();
+        inventoryInstance = null;
+        console.log('[Inventory] Server closed.');
+    }
     pluginsInitialized = false;
 }
 
