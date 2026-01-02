@@ -7,8 +7,8 @@ export interface BotConfig {
   authMethod: AuthMethod;
   microsoftEmail?: string;
   serverPassword?: string;
-  discordToken?: string;
   discordChannelId?: string;
+  useProxy?: boolean;
 }
 
 export interface BotPosition {

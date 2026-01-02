@@ -4,7 +4,6 @@ const http = require('http');
 const express = require('express');
 const path = require('path');
 const { createProxyMiddleware } = require('http-proxy-middleware');
-const ngrok = require('ngrok');
 const { Server } = require("socket.io");
 const { initDiscord, setDiscordChannel, sendMessageToChannel, updateBotInstance, EmbedBuilder, getClient: getDiscordClient } = require('./discord');
 const proxyManager = require('./proxyManager');
@@ -93,7 +92,6 @@ async function startFullApplication() {
     server.listen(mainPort, () => {
         const localUrl = `http://localhost:${mainPort}`;
         console.log(`[Dashboard] Main dashboard listening on ${localUrl}`);
-        startNgrok(config, localUrl);
     });
 
     createBot(config);
@@ -128,22 +126,6 @@ function setupProxies(config) {
     }));
 }
 
-async function startNgrok(config, localUrl) {
-    if (config.ngrokAuthToken) {
-        console.log('[ngrok] NGROK_AUTH_TOKEN found. Starting tunnel...');
-        try {
-            await ngrok.kill();
-            await ngrok.authtoken(config.ngrokAuthToken);
-            const url = await ngrok.connect(config.mainDashboardPort || 8080);
-            botState.dashboardUrl = url;
-            console.log(`[ngrok] Tunnel established at: ${url}`);
-        } catch (err) {
-            console.error('[ngrok] CRITICAL ERROR:', err.message);
-            botState.dashboardUrl = localUrl;
-        }
-    }
-}
-
 function shutdownPlugins() {
     if (viewerInstance) viewerInstance.close();
     if (inventoryInstance) inventoryInstance.close();
@@ -151,16 +133,29 @@ function shutdownPlugins() {
     pluginsInitialized = false;
 }
 
-function createBot(config) {
+async function createBot(config) {
     console.log(`[Bot] Connecting to ${config.serverAddress}:${config.serverPort}...`);
-    bot = mineflayer.createBot({
+
+    const botOptions = {
         host: config.serverAddress,
         port: parseInt(config.serverPort, 10),
         username: config.authMethod === 'microsoft' ? config.microsoftEmail : config.botUsername,
         auth: config.authMethod,
         version: config.serverVersion || false,
         plugins: [{ plugin: autoAuth, options: { password: config.serverPassword } }],
-    });
+    };
+
+    if (config.useProxy) {
+        const proxyAgent = await proxyManager.getProxyAgent();
+        if (proxyAgent) {
+            console.log('[Bot] Connecting with proxy...');
+            botOptions.agent = proxyAgent;
+        } else {
+            console.warn('[Bot] Proxy enabled, but no working proxy found. Connecting directly.');
+        }
+    }
+
+    bot = mineflayer.createBot(botOptions);
 
     bot.once('spawn', () => {
         console.log('[Bot] Spawn event fired. Initializing plugins...');
@@ -235,7 +230,6 @@ io.on('connection', (socket) => {
 
 // --- Graceful Shutdown ---
 process.on('SIGINT', async () => {
-    await ngrok.kill();
     process.exit(0);
 });
 

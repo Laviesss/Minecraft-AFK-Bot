@@ -18,7 +18,6 @@
     "mineflayer": "^4.33.0",
     "mineflayer-auto-auth": "^2.0.0",
     "mineflayer-web-inventory": "^1.8.5",
-    "ngrok": "^5.0.0-beta.2",
     "prismarine-viewer": "^1.33.0",
     "proxy-agent": "^6.5.0",
     "socket.io": "^4.8.3",

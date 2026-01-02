@@ -11,8 +11,7 @@ This project provides a powerful, feature-rich Minecraft AFK bot built with Node
 - **🏃‍♂️ Movement Controls:** Control the bot's movement directly from the web dashboard and Discord.
 - **🔒 Flexible Authentication:** Supports both `microsoft` (premium) and `offline` (cracked) server authentication.
 - **🔔 Discord Integration:** Get real-time notifications and control the bot via slash commands in your Discord server.
-- **🛡️ Proxy Support:** Connect through a SOCKS5 proxy by adding your proxies to the `proxies.txt` file.
-- **🚀 Ngrok Tunneling:** Automatically creates a secure public URL for your local dashboard, making it easy to share or access from anywhere.
+- **🛡️ Configurable Proxy Support:** Easily enable or disable the use of a SOCKS5 proxy through the setup wizard.
 
 ---
 
@@ -72,4 +71,8 @@ The Discord integration is now easier than ever:
 4.  In Discord, right-click the channel where you want the bot to send messages and click **"Copy Channel ID"**.
 5.  Paste this ID into the "Channel ID" field in the setup wizard.
 
-That's it! You no longer need to create and manage your own Discord bot application.
+### Proxy Configuration
+
+The setup wizard includes a "Proxy Settings" step that allows you to enable or disable the use of a SOCKS5 proxy.
+- If enabled, the bot will attempt to connect through a proxy from the `proxies.txt` file.
+- If disabled, the bot will connect directly to the Minecraft server.
