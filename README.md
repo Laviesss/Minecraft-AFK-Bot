@@ -1,62 +1,78 @@
-# Node.js Minecraft AFK Bot for Render
+# Advanced Mineflayer AFK Bot & Dashboard
 
-This project provides a simple and reliable 24/7 Minecraft AFK bot, rewritten in Node.js for enhanced stability. It is designed for easy deployment on [Render's](https://render.com/) free tier.
+This project provides a powerful, feature-rich Minecraft AFK bot built with Node.js and the Mineflayer library. It features a unified web dashboard that integrates multiple plugins, allowing you to monitor and interact with the bot in real-time from your browser. It's designed for easy setup and can be deployed on cloud services like Render.
 
-## Local Setup
+## ✨ Features
 
-Before running the bot on your local machine, you need to configure your environment variables.
+- **Configuration Wizard:** A user-friendly, web-based wizard for initial bot setup. No more manual file editing to get started!
+- **Unified Web Dashboard:** Access all web-based tools from a single, clean interface.
+- **🌐 3D World Viewer:** See what the bot sees with a live, in-browser 3D render of the world (`prismarine-viewer`).
+- **📦 Live Inventory Management:** View and manage the bot's inventory directly from the web dashboard (`mineflayer-web-inventory`).
+- **🏃‍♂️ Movement Controls:** Control the bot's movement directly from the web dashboard and Discord.
+- **🔒 Flexible Authentication:** Supports both `microsoft` (premium) and `offline` (cracked) server authentication.
+- **🔔 Discord Integration:** Get real-time notifications and control the bot via slash commands in your Discord server.
+- **🛡️ Configurable Proxy Support:** Easily enable or disable the use of a SOCKS5 proxy through the setup wizard.
 
-1.  **Create a `.env` file:** Make a copy of the `.env.example` file and rename it to `.env`.
-2.  **Fill in the values:** Open the new `.env` file and fill in your server details, Discord bot token, and any other required information.
+---
 
-The application consists of two main components running in a single process:
-1.  **A Mineflayer Bot:** A powerful and popular Node.js library for creating Minecraft bots. It handles all the complexities of the Minecraft protocol and includes a robust, event-driven system for managing connections.
-2.  **An Express Web Server:** A lightweight web server that provides a public URL. This is used by an external keep-alive service to prevent Render's free web service from spinning down due to inactivity.
+## 🚀 Getting Started
 
-## Configuration (Environment Variables)
+This application uses a web-based setup wizard, so you don't need to manually create any configuration files.
 
-The bot is configured using environment variables on Render. You will need to set the following:
+### Prerequisites
 
-*   `MC_SERVER_ADDRESS`: The address of the Minecraft server (e.g., `mc.example.com`).
-*   `MC_USERNAME`: The username for the bot to use (for offline-mode servers).
-*   `MC_SERVER_PORT` (Optional): The port of the Minecraft server. Defaults to `25565`.
-*   `MC_VERSION` (Highly Recommended): The Minecraft version of the server (e.g., `1.18.2`). **This is often required for a successful connection.** You can usually find the correct version on your server's main page (like on Aternos).
+- **Node.js:** Version 22.0.0 or higher is required. You can download it from [nodejs.org](https://nodejs.org/).
+- **Git:** Required to clone the repository.
+- **(Optional) Discord Bot Token:** If you plan to use the Discord integration, you will need to have a Discord bot token set as an environment variable.
 
-## How to Deploy on Render
+### Installation & First-Time Setup
 
-1.  **Fork this Repository:** Click the "Fork" button at the top-right of this page.
+**1. Clone the Repository:**
+```bash
+git clone https://github.com/your-username/your-repo-name.git
+cd your-repo-name
+```
 
-2.  **Create a New Web Service in Render:**
-    *   From your dashboard, click **"New +"** -> **"Web Service"**.
-    *   Connect your GitHub account and select your forked repository.
-    *   **Name:** Give it a unique name (e.g., `my-node-afk-bot`).
-    *   **Region:** Choose a region close to your Minecraft server.
-    *   **Runtime:** `Node`. (Render will automatically detect this from the `package.json` file).
-    *   **Build Command:** `npm install` (This is the standard command for Node.js projects).
-    *   **Start Command:** `node index.js` (Render should detect this from the `Procfile`).
-    *   **Instance Type:** `Free`.
+**2. Install Dependencies:**
+```bash
+npm install
+```
 
-3.  **Add Environment Variables:**
-    *   Before creating the service, go to **"Advanced Settings"**.
-    *   Click **"Add Environment Variable"** and add your Minecraft server details (`MC_SERVER_ADDRESS`, `MC_USERNAME`, etc.).
+**3. (Optional) Set Discord Token:**
+If you want to enable the Discord bot, set the `DISCORD_TOKEN` environment variable. You can do this by creating a `.env` file in the project root:
+```
+DISCORD_TOKEN=your_super_secret_discord_bot_token
+```
+The application will automatically load this variable.
 
-4.  **Deploy:**
-    *   Click **"Create Web Service"**. Render will install your dependencies, build the project, and deploy the bot.
-    *   Once the deployment is live, check the logs to see the bot's status.
-    *   Copy your service's URL (e.g., `https://my-node-afk-bot.onrender.com`). You will need this for the next step.
+**4. Run the Application:**
+```bash
+npm start
+```
 
-## Setting Up a Keep-Alive Service (Required for Free Tier)
+**5. Complete the Web Setup:**
+- When you first run the application, it will start in **setup mode**.
+- Open your browser and navigate to the URL shown in the console (usually `http://localhost:8080`).
+- Follow the on-screen instructions in the **Setup Wizard** to configure your bot.
+- Once you save the configuration, the application will automatically restart in **full mode**.
 
-Render's free web services spin down after 15 minutes of inactivity. To keep your bot running 24/7, you must use an external service to ping your bot's URL every 15 minutes or less.
+---
 
-### UptimeRobot (Easiest Method)
+## ⚙️ Configuration
 
-1.  **Create a free account** at [uptimerobot.com](https://uptimerobot.com/).
-2.  From your dashboard, click **"Add New Monitor"**.
-3.  **Monitor Type:** `HTTP(s)`.
-4.  **Friendly Name:** Give it a name (e.g., "Minecraft Bot Keep-Alive").
-5.  **URL (or IP):** Paste your Render service URL.
-6.  **Monitoring Interval:** Set it to **15 minutes** or less.
-7.  Click **"Create Monitor"**.
+After the initial setup, the bot's configuration is stored in a `bot-config.json` file. You can edit this file directly or delete it to run the Setup Wizard again.
 
-Your bot is now fully configured to run 24/7!
+### Discord Integration Setup
+
+The Discord integration is now easier than ever:
+1.  **Bot Owner:** The owner of the bot application must set the `DISCORD_TOKEN` as an environment variable on the server where the bot is running.
+2.  **User:** During the web-based setup, the Discord step will provide you with an **invite link**.
+3.  Click the link to invite the pre-configured bot to your server.
+4.  In Discord, right-click the channel where you want the bot to send messages and click **"Copy Channel ID"**.
+5.  Paste this ID into the "Channel ID" field in the setup wizard.
+
+### Proxy Configuration
+
+The setup wizard includes a "Proxy Settings" step that allows you to enable or disable the use of a SOCKS5 proxy.
+- If enabled, the bot will attempt to connect through a proxy from the `proxies.txt` file.
+- If disabled, the bot will connect directly to the Minecraft server.
