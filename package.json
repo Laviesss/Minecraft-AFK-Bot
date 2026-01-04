@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "npm run build && node index.js",
-    "build": "esbuild public/index.tsx --bundle --outfile=public/bundle.js --loader:.tsx=tsx --resolve-extensions=.tsx,.ts,.js"
+    "build": "esbuild public/index.tsx --bundle --outfile=public/bundle.js --loader:.tsx=tsx --resolve-extensions=.tsx,.ts,.js --external:socket.io-client"
   },
   "dependencies": {
     "canvas": "^3.2.0",
