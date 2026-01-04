@@ -96,6 +96,7 @@ async function startFullApplication() {
     }
 
     setDiscordChannel(config);
+    setupProxies(config);
 
     const mainPort = config.mainDashboardPort || 8080;
     server.listen(mainPort, () => {
@@ -171,9 +172,6 @@ async function createBot(config) {
         console.log('[Bot] Spawn event fired. Initializing plugins...');
         if (pluginsInitialized) return;
         try {
-            // Setup proxies just before starting the plugin servers
-            setupProxies(config);
-
             const viewerPort = config.viewerPort || 3001;
             const inventoryPort = config.inventoryPort || 3002;
             viewer(bot, { port: viewerPort, firstPerson: false });

@@ -128,54 +128,37 @@
         </div>
     </div>
 
-    <!-- The official client build is ESM-only, so we need a different version for simple HTML script tags -->
-    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // Connect to the server's Socket.IO namespace
             const socket = io({ path: '/socket.io' });
-
             const chatLog = document.getElementById('chat-log');
-            const chatInputForm = document.getElementById('chat-input-form');
-            const chatInput = document.getElementById('chat-input');
+            const chatInput = document.getElementById('chat-input-form')['chat-input'];
+            const chatForm = document.getElementById('chat-input-form');
 
-            // Function to add a new message to the chat log
             function addChatMessage(message) {
-                const messageElement = document.createElement('div');
-                messageElement.classList.add('chat-message');
-                messageElement.textContent = message;
-                chatLog.appendChild(messageElement);
-                // Auto-scroll to the bottom
+                const el = document.createElement('div');
+                el.classList.add('chat-message');
+                el.textContent = message;
+                chatLog.appendChild(el);
                 chatLog.scrollTop = chatLog.scrollHeight;
             }
 
-            // --- Event Listeners ---
-
-            // Handle form submission to send a message
-            chatInputForm.addEventListener('submit', () => {
+            function sendMessage(e) {
+                e.preventDefault();
                 const message = chatInput.value.trim();
                 if (message) {
-                    // Emit the message to the server
                     socket.emit('send-chat-message', { message });
-                    // Add the message to our own log instantly
                     addChatMessage(`You: ${message}`);
-                    // Clear the input field
                     chatInput.value = '';
                 }
-            });
+            }
 
-            // Listen for incoming chat messages from the server/bot
-            socket.on('chat-message', ({ message }) => {
-                addChatMessage(message);
-            });
+            socket.on('chat-message', ({ message }) => addChatMessage(message));
+            chatForm.addEventListener('submit', sendMessage);
 
-            socket.on('connect', () => {
-                addChatMessage('🔌 Connected to the bot server.');
-            });
-
-            socket.on('disconnect', () => {
-                addChatMessage('🔌 Disconnected from the bot server.');
-            });
+            socket.on('connect', () => addChatMessage('Connected to server.'));
+            socket.on('disconnect', () => addChatMessage('Disconnected from server.'));
         });
     </script>
 </body>
