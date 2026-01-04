@@ -32,19 +32,17 @@ const server = http.createServer(app);
 const io = new Server(server, { path: '/socket.io' });
 
 app.use(express.json());
-app.use(express.static(path.join(__dirname, '../public')));
 
 // Serve the correct dashboard based on the environment variable
 app.get('/', (req, res) => {
-    console.log(`[Server] Handling request. DASHBOARD_MODE is currently: '${process.env.DASHBOARD_MODE}'`);
-    if (process.env.DASHBOARD_MODE === 'simple') {
-        console.log('[Server] Serving simple.html');
+    if (configManager.isDeveloperMode()) {
         res.sendFile(path.join(__dirname, '../public/simple.html'));
     } else {
-        console.log('[Server] Serving index.html');
         res.sendFile(path.join(__dirname, '../public/index.html'));
     }
 });
+
+app.use(express.static(path.join(__dirname, '../public')));
 
 // --- API Endpoints ---
 app.get('/api/status', async (req, res) => {
@@ -98,13 +96,13 @@ async function startFullApplication() {
     }
 
     setDiscordChannel(config);
-    setupProxies(config); // Re-add the proxy setup
 
     const mainPort = config.mainDashboardPort || 8080;
     server.listen(mainPort, () => {
         const localUrl = `http://localhost:${mainPort}`;
         console.log(`[Dashboard] Main dashboard listening on ${localUrl}`);
     });
+
 
     createBot(config);
 }
@@ -173,6 +171,9 @@ async function createBot(config) {
         console.log('[Bot] Spawn event fired. Initializing plugins...');
         if (pluginsInitialized) return;
         try {
+            // Setup proxies just before starting the plugin servers
+            setupProxies(config);
+
             const viewerPort = config.viewerPort || 3001;
             const inventoryPort = config.inventoryPort || 3002;
             viewer(bot, { port: viewerPort, firstPerson: false });
