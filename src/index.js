@@ -22,6 +22,7 @@ let pluginsInitialized = false;
 let botState = {
     isOnline: false,
     health: 20,
+    maxHealth: 20,
     hunger: 20,
     position: { x: 0, y: 0, z: 0 },
 };
@@ -190,25 +191,47 @@ async function createBot(config) {
 
 function attachBotListeners(config) {
     bot.on('login', () => {
-        console.log(`[Bot] Logged in as '${bot.username}'.`);
+        const botSocket = bot._client.socket;
+        const address = botSocket ? `${botSocket.remoteAddress}:${botSocket.remotePort}` : 'N/A';
+        console.log(`[Bot] Successfully logged in as '${bot.username}' to [${address}].`);
         botState.isOnline = true;
     });
 
     bot.on('end', (reason) => {
         console.log(`[Bot] Disconnected. Reason: ${reason}. Reconnecting in 10s...`);
         botState.isOnline = false;
+        io.emit('bot-state', { isOnline: false });
         shutdownPlugins();
         if(bot) bot.removeAllListeners();
         setTimeout(() => createBot(config), 10000);
     });
 
-    bot.on('error', (err) => console.error('[Bot] A non-fatal error occurred:', err));
-    bot.on('kicked', (reason) => console.log('[Bot] Kicked from server. Reason:', reason));
+    bot.on('error', (err) => {
+        console.error('[Bot] A bot error occurred:', err);
+        // Also send a system message to the dashboard
+        io.emit('chat-message', {
+            sender: 'System',
+            message: `Bot connection error: ${err.message || err.code}`,
+            type: 'system',
+            timestamp: new Date().toLocaleTimeString()
+        });
+    });
+
+    bot.on('kicked', (reason) => {
+        console.log('[Bot] Kicked from server. Reason:', reason);
+        io.emit('chat-message', {
+            sender: 'System',
+            message: `Kicked from server: ${reason}`,
+            type: 'system',
+            timestamp: new Date().toLocaleTimeString()
+        });
+    });
 
     // Periodically send state to the dashboard
     setInterval(() => {
         if (!bot || !botState.isOnline) return;
         botState.health = bot.health;
+        botState.maxHealth = bot.maxHealth;
         botState.hunger = bot.food;
         if (bot.entity) {
             botState.position = bot.entity.position.floored();

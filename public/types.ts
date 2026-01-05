@@ -1,7 +1,10 @@
+import { Socket } from 'socket.io-client';
+
 export interface BotStatus {
   connected: boolean;
   socketConnected: boolean;
   health: number;
+  maxHealth: number;
   hunger: number;
   position: { x: number; y: number; z: number };
   isMoving: boolean;
@@ -17,7 +20,7 @@ export interface ChatMessage {
 }
 
 export interface SocketContextType {
-  socket: any;
+  socket: Socket | null;
   status: BotStatus;
   chatHistory: ChatMessage[];
   sendChatMessage: (message: string) => void;

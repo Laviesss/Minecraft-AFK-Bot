@@ -1,5 +1,5 @@
 import React, { useState, useEffect, createContext } from 'react';
-import io from 'socket.io-client';
+import io, { Socket } from 'socket.io-client';
 import Header from './components/Header';
 import ViewerPanel from './components/ViewerPanel';
 import InventoryPanel from './components/InventoryPanel';
@@ -10,11 +10,12 @@ import { BotStatus, ChatMessage, SocketContextType } from './types';
 export const SocketContext = createContext<SocketContextType | null>(null);
 
 const App: React.FC = () => {
-  const [socket, setSocket] = useState<any>(null);
+  const [socket, setSocket] = useState<Socket | null>(null);
   const [status, setStatus] = useState<BotStatus>({
     connected: false,
     socketConnected: false,
     health: 20,
+    maxHealth: 20,
     hunger: 20,
     position: { x: 0, y: 0, z: 0 },
     isMoving: false,
