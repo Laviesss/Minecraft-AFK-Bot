@@ -1,76 +1,54 @@
-import React from 'react';
-import { BotState } from '../types';
-import { Heart, Utensils, Activity } from 'lucide-react';
+import React, { useContext } from 'react';
+import { SocketContext } from '../App';
+import { SocketContextType } from '../types';
 
-interface StatsPanelProps {
-  stats: BotState | null;
-}
+const StatsPanel: React.FC = () => {
+  const { status } = useContext(SocketContext) as SocketContextType;
 
-export const StatsPanel: React.FC<StatsPanelProps> = ({ stats }) => {
-  const getProgressWidth = (val: number, max: number = 20) => `${(val / max) * 100}%`;
+  const healthPercentage = (status.health / 20) * 100;
+  const hungerPercentage = (status.hunger / 20) * 100;
 
   return (
-    <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5 shadow-sm bg-gradient-to-br from-zinc-900 to-black">
-      <div className="flex items-center justify-between mb-6">
-        <h3 className="text-zinc-400 text-[10px] font-black uppercase tracking-[0.2em] flex items-center gap-2">
-          <Activity className="w-4 h-4 text-purple-500" /> Bot_Status
-        </h3>
-        <div className="flex items-center gap-2 px-2.5 py-1 bg-zinc-800/50 border border-zinc-700/30 rounded-md">
-          <div className={`w-1.5 h-1.5 rounded-full ${stats?.isOnline ? 'bg-purple-500 animate-pulse shadow-[0_0_8px_rgba(168,85,247,0.6)]' : 'bg-red-500'}`} />
-          <span className="text-[9px] font-black text-zinc-300 uppercase tracking-tighter">{stats?.isOnline ? 'Active' : 'Standby'}</span>
-        </div>
+    <div className="h-full bg-[#121212] border border-white/[0.04] rounded-xl p-5 flex flex-col justify-between overflow-hidden">
+      <div className="space-y-3">
+        <StatRow label="HP" value={`${healthPercentage.toFixed(0)}%`} color={healthPercentage > 50 ? 'text-white' : 'text-red-400'} />
+        <StatRow label="Food" value={`${hungerPercentage.toFixed(0)}%`} color="text-white/40" />
       </div>
 
-      <div className="space-y-5">
-        {/* Health */}
-        <div>
-          <div className="flex justify-between items-end mb-1.5">
-            <span className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest flex items-center gap-1.5">
-              <Heart className="w-3 h-3 text-red-500 fill-current opacity-80" /> Health
-            </span>
-            <span className="text-white text-[10px] font-mono font-bold">{stats?.health || 0} / 20</span>
-          </div>
-          <div className="h-1 w-full bg-zinc-800/80 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-gradient-to-r from-red-600 to-red-400 transition-all duration-500 ease-out shadow-[0_0_10px_rgba(220,38,38,0.3)]"
-              style={{ width: getProgressWidth(stats?.health || 0) }}
-            />
-          </div>
-        </div>
+      <div className="h-[1px] bg-white/[0.02] w-full" />
 
-        {/* Hunger */}
-        <div>
-          <div className="flex justify-between items-end mb-1.5">
-            <span className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest flex items-center gap-1.5">
-              <Utensils className="w-3 h-3 text-orange-500 opacity-80" /> Hunger
-            </span>
-            <span className="text-white text-[10px] font-mono font-bold">{stats?.hunger || 0} / 20</span>
-          </div>
-          <div className="h-1 w-full bg-zinc-800/80 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-gradient-to-r from-orange-600 to-orange-400 transition-all duration-500 ease-out shadow-[0_0_10px_rgba(234,88,12,0.3)]"
-              style={{ width: getProgressWidth(stats?.hunger || 0) }}
-            />
-          </div>
-        </div>
+      <div className="grid grid-cols-3 gap-2">
+        <DataPoint label="X" value={status.position.x.toFixed(0)} />
+        <DataPoint label="Y" value={status.position.y.toFixed(0)} />
+        <DataPoint label="Z" value={status.position.z.toFixed(0)} />
+      </div>
 
-        {/* Position */}
-        <div className="pt-2">
-          <span className="text-zinc-600 text-[9px] font-black uppercase tracking-[0.3em] block mb-3">Spatial_Coordinates</span>
-          <div className="grid grid-cols-3 gap-2">
-            {[
-              { label: 'X', val: stats?.position.x, color: 'text-purple-400' },
-              { label: 'Y', val: stats?.position.y, color: 'text-purple-300' },
-              { label: 'Z', val: stats?.position.z, color: 'text-purple-500' },
-            ].map(({ label, val, color }) => (
-              <div key={label} className="bg-black/40 border border-zinc-800/50 rounded-lg p-2 flex flex-col items-center">
-                <span className={`text-[9px] font-black ${color}`}>{label}</span>
-                <span className="text-white font-mono text-[11px] leading-tight mt-0.5">{val?.toFixed(1) || '0.0'}</span>
-              </div>
-            ))}
-          </div>
+      <div className="flex justify-between items-center mt-2">
+        <div className="flex flex-col">
+          <span className="text-[8px] text-white/10 uppercase">Biome</span>
+          <span className="text-[10px] text-white/40 font-medium">--</span>
+        </div>
+        <div className="flex flex-col text-right">
+          <span className="text-[8px] text-white/10 uppercase">Dimension</span>
+          <span className="text-[10px] text-white/40 font-medium">--</span>
         </div>
       </div>
     </div>
   );
 };
+
+const StatRow: React.FC<{ label: string; value: string; color?: string }> = ({ label, value, color }) => (
+  <div className="flex justify-between items-center">
+    <span className="text-[9px] uppercase tracking-wider text-white/20 font-medium">{label}</span>
+    <span className={`text-xs font-medium ${color || 'text-white/60'}`}>{value}</span>
+  </div>
+);
+
+const DataPoint: React.FC<{ label: string; value: string; className?: string }> = ({ label, value, className }) => (
+  <div className={`flex flex-col ${className}`}>
+    <span className="text-[8px] text-white/10 font-medium uppercase">{label}</span>
+    <span className="text-[11px] text-white/50 font-medium mono">{value}</span>
+  </div>
+);
+
+export default StatsPanel;

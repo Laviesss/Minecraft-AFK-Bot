@@ -1,46 +1,87 @@
-import React, { useState, useEffect } from 'react';
-import { SetupWizard } from './components/SetupWizard.tsx';
-import { Dashboard } from './components/Dashboard.tsx';
-import { Loader2 } from 'lucide-react';
+import React, { useState, useEffect, createContext } from 'react';
+import io from 'socket.io-client';
+import Header from './components/Header';
+import ViewerPanel from './components/ViewerPanel';
+import InventoryPanel from './components/InventoryPanel';
+import StatsPanel from './components/StatsPanel';
+import ChatPanel from './components/ChatPanel';
+import { BotStatus, ChatMessage, SocketContextType } from './types';
+
+export const SocketContext = createContext<SocketContextType | null>(null);
 
 const App: React.FC = () => {
-  const [isConfigured, setIsConfigured] = useState<boolean | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [socket, setSocket] = useState<any>(null);
+  const [status, setStatus] = useState<BotStatus>({
+    connected: false,
+    socketConnected: false,
+    health: 20,
+    hunger: 20,
+    position: { x: 0, y: 0, z: 0 },
+    isMoving: false,
+    activeTask: 'Offline',
+  });
+  const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
 
   useEffect(() => {
-    const checkStatus = async () => {
-      try {
-        const res = await fetch('/api/status');
-        const data = await res.json();
-        setIsConfigured(data.configured);
-      } catch (e) {
-        console.error("Failed to fetch status", e);
-        // Fallback for demo purposes
-        setIsConfigured(false);
-      } finally {
-        setLoading(false);
-      }
+    const newSocket = io();
+    setSocket(newSocket);
+
+    newSocket.on('connect', () => {
+      setStatus(prev => ({ ...prev, socketConnected: true, activeTask: 'Idle' }));
+    });
+
+    newSocket.on('disconnect', () => {
+      setStatus(prev => ({ ...prev, socketConnected: false, connected: false, activeTask: 'Offline' }));
+    });
+
+    newSocket.on('bot-status', (newStatus: Partial<BotStatus>) => {
+      setStatus(prev => ({
+        ...prev,
+        ...newStatus,
+        activeTask: newStatus.isMoving ? 'Navigating' : 'Idle'
+      }));
+    });
+
+    newSocket.on('chat-message', (newMessage: Omit<ChatMessage, 'id'>) => {
+      setChatHistory(prev => [...prev, { ...newMessage, id: Date.now().toString() }]);
+    });
+
+    return () => {
+      newSocket.close();
     };
-    checkStatus();
   }, []);
 
-  if (loading) {
-    return (
-      <div className="h-screen w-full flex flex-col items-center justify-center bg-[#000000] bg-[radial-gradient(circle_at_center,_#1e0c3a_0%,_#000000_100%)]">
-        <Loader2 className="w-12 h-12 text-purple-500 animate-spin mb-4" />
-        <p className="text-zinc-500 font-medium tracking-widest text-xs uppercase animate-pulse">Initializing Neural Link...</p>
-      </div>
-    );
-  }
+  const sendChatMessage = (message: string) => {
+    if (socket) {
+      socket.emit('send-chat', message);
+    }
+  };
+
+  const contextValue = {
+    socket,
+    status,
+    chatHistory,
+    sendChatMessage,
+  };
 
   return (
-    <div className="h-screen bg-[#000000] bg-[radial-gradient(circle_at_center,_#1e0c3a_0%,_#000000_100%)] text-zinc-100 overflow-hidden font-sans text-selection-purple">
-      {!isConfigured ? (
-        <SetupWizard onComplete={() => setIsConfigured(true)} />
-      ) : (
-        <Dashboard onReset={() => setIsConfigured(false)} />
-      )}
-    </div>
+    <SocketContext.Provider value={contextValue}>
+      <div className="flex flex-col h-screen w-full bg-[#0A0A0A] p-4 gap-4 overflow-hidden">
+        <Header />
+        <div className="flex-[1.4] flex w-full gap-4 min-h-0">
+          <InventoryPanel />
+          <ViewerPanel />
+        </div>
+        <div className="flex-1 flex w-full gap-4 min-h-0">
+          <div className="w-72 flex-none">
+            <StatsPanel />
+          </div>
+          <div className="flex-1">
+            <ChatPanel />
+          </div>
+        </div>
+      </div>
+    </SocketContext.Provider>
   );
 };
 

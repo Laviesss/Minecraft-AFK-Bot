@@ -1,39 +1,24 @@
-export type AuthMethod = 'Offline' | 'Microsoft';
-
-export interface BotConfig {
-  serverAddress: string;
-  serverPort: number;
-  botUsername: string;
-  authMethod: AuthMethod;
-  microsoftEmail?: string;
-  serverPassword?: string;
-  discordChannelId?: string;
-  useProxy?: boolean;
-}
-
-export interface BotPosition {
-  x: number;
-  y: number;
-  z: number;
-}
-
-export interface BotState {
-  isOnline: boolean;
+export interface BotStatus {
+  connected: boolean;
+  socketConnected: boolean;
   health: number;
   hunger: number;
-  position: BotPosition;
+  position: { x: number; y: number; z: number };
+  isMoving: boolean;
+  activeTask: string;
 }
 
 export interface ChatMessage {
   id: string;
+  timestamp: string;
+  sender: string;
   message: string;
-  timestamp: number;
+  type: 'system' | 'player' | 'bot';
 }
 
-export enum MoveDirection {
-  FORWARD = 'forward',
-  BACK = 'back',
-  LEFT = 'left',
-  RIGHT = 'right',
-  JUMP = 'jump'
+export interface SocketContextType {
+  socket: any;
+  status: BotStatus;
+  chatHistory: ChatMessage[];
+  sendChatMessage: (message: string) => void;
 }
