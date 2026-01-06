@@ -4,16 +4,11 @@ import ControlsOverlay from './ControlsOverlay';
 const ViewerPanel: React.FC = () => {
   return (
     <div className="flex-1 bg-[#121212] border border-white/[0.04] rounded-xl overflow-hidden flex flex-col relative min-w-0">
-      {/* Iframe container that fills the space */}
-      <div className="flex-1 w-full h-full">
-        <iframe
-          src="/viewer"
-          className="w-full h-full border-0"
-          title="Prismarine Viewer"
-        />
-      </div>
-
-      {/* Overlay for UI elements */}
+      <iframe
+        src="/viewer"
+        className="flex-1 w-full border-0"
+        title="Prismarine Viewer"
+      />
       <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
         <div className="relative w-full h-full">
           <div className="absolute top-4 left-5">

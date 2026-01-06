@@ -225,19 +225,10 @@ function attachBotListeners(config) {
     });
 
     bot.on('message', (jsonMsg) => {
-        const message = jsonMsg.toString();
-        console.log(`[Chat] ${message}`);
-        // Attempt to parse sender from typical Minecraft chat formats
-        const match = message.match(/^<(.*?)> (.*)$/);
-        const sender = match ? match[1] : 'System';
-        const content = match ? match[2] : message;
-
-        io.emit('chat-message', {
-            sender: sender,
-            message: content,
-            type: 'player',
-            timestamp: new Date().toLocaleTimeString()
-        });
+        const message = jsonMsg.toString().trim();
+        if (!message) return; // Don't send empty messages
+        console.log(`[Chat] Broadcasting: ${message}`);
+        io.emit('chat-message', { message });
     });
 
     bot.on('kicked', (reason) => {
