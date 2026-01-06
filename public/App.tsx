@@ -24,22 +24,23 @@ const App: React.FC = () => {
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
 
   useEffect(() => {
-    const newSocket = io();
+    const newSocket = io({ path: '/socket.io' });
     setSocket(newSocket);
 
     newSocket.on('connect', () => {
-      setStatus(prev => ({ ...prev, socketConnected: true, activeTask: 'Idle' }));
+      setStatus(prev => ({ ...prev, socketConnected: true, activeTask: 'Connecting...' }));
     });
 
     newSocket.on('disconnect', () => {
       setStatus(prev => ({ ...prev, socketConnected: false, connected: false, activeTask: 'Offline' }));
     });
 
-    newSocket.on('bot-status', (newStatus: Partial<BotStatus>) => {
+    newSocket.on('bot-state', (newState: Partial<BotStatus> & { isOnline?: boolean }) => {
       setStatus(prev => ({
         ...prev,
-        ...newStatus,
-        activeTask: newStatus.isMoving ? 'Navigating' : 'Idle'
+        ...newState,
+        connected: newState.isOnline || false,
+        activeTask: newState.isOnline ? (newState.isMoving ? 'Navigating' : 'Idle') : 'Offline',
       }));
     });
 
@@ -54,7 +55,7 @@ const App: React.FC = () => {
 
   const sendChatMessage = (message: string) => {
     if (socket) {
-      socket.emit('send-chat', message);
+      socket.emit('send-chat-message', { message });
     }
   };
 

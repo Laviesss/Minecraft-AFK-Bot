@@ -167,7 +167,14 @@ async function createBot(config) {
         }
     }
 
-    bot = mineflayer.createBot(botOptions);
+    try {
+        bot = mineflayer.createBot(botOptions);
+    } catch (err) {
+        console.error('[Bot] CRITICAL: mineflayer.createBot() failed.', err);
+        console.log('[Bot] Reconnecting in 10s...');
+        setTimeout(() => createBot(config), 10000);
+        return;
+    }
 
     bot.once('spawn', () => {
         console.log('[Bot] Spawn event fired. Initializing plugins...');
@@ -259,6 +266,11 @@ io.on('connection', (socket) => {
 
     socket.on('stop-move', () => {
         if (bot && botState.isOnline) bot.clearControlStates();
+    });
+
+    socket.on('terminate', () => {
+        console.log('[System] Received terminate signal from dashboard.');
+        if (bot) bot.quit('Dashboard reset.');
     });
 });
 
