@@ -55,6 +55,17 @@ const App: React.FC = () => {
 
   const sendChatMessage = (message: string) => {
     if (socket) {
+      // Optimistic update: add to local state immediately
+      const newMessage: ChatMessage = {
+        id: Date.now().toString(),
+        timestamp: new Date().toLocaleTimeString(),
+        sender: 'You',
+        message,
+        type: 'player',
+      };
+      setChatHistory(prev => [...prev, newMessage]);
+
+      // Emit to server
       socket.emit('send-chat-message', { message });
     }
   };
@@ -70,7 +81,7 @@ const App: React.FC = () => {
     <SocketContext.Provider value={contextValue}>
       <div className="flex flex-col h-screen w-full bg-[#0A0A0A] p-4 gap-4 overflow-hidden">
         <Header />
-        <div className="flex-[1.4] flex w-full gap-4 min-h-0">
+        <div className="flex-1 flex w-full gap-4 min-h-0">
           <InventoryPanel />
           <ViewerPanel />
         </div>

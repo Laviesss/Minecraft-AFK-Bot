@@ -42,6 +42,8 @@ const Key: React.FC<{ icon: React.ReactNode; onClick?: () => void; onMouseDown?:
     onClick={onClick}
     onMouseDown={onMouseDown}
     onMouseUp={onMouseUp}
+    onTouchStart={onMouseDown}
+    onTouchEnd={onMouseUp}
     onMouseLeave={onMouseUp}
     className="w-8 h-8 flex items-center justify-center border border-white/5 rounded-lg text-white/20 hover:border-purple-500/50 hover:text-purple-400 transition-colors cursor-pointer select-none"
   >
@@ -53,6 +55,8 @@ const ActionButton: React.FC<{ label: string; icon: React.ReactNode; onMouseDown
   <div
     onMouseDown={onMouseDown}
     onMouseUp={onMouseUp}
+    onTouchStart={onMouseDown}
+    onTouchEnd={onMouseUp}
     onMouseLeave={onMouseUp}
     className="flex items-center justify-center gap-1.5 py-1.5 px-2 border border-white/5 rounded-lg text-[9px] font-bold uppercase tracking-tighter text-white/20 hover:text-white/60 transition-colors cursor-pointer select-none"
   >

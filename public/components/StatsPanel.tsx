@@ -5,21 +5,29 @@ import { SocketContextType } from '../types';
 const StatsPanel: React.FC = () => {
   const { status } = useContext(SocketContext) as SocketContextType;
 
-  const healthColor = (status.health / status.maxHealth) > 0.5 ? 'text-white' : 'text-red-400';
+  const healthColor = status.connected && (status.health / status.maxHealth) > 0.5 ? 'text-white' : 'text-red-400';
 
   return (
     <div className="h-full bg-[#121212] border border-white/[0.04] rounded-xl p-5 flex flex-col justify-between overflow-hidden">
       <div className="space-y-3">
-        <StatRow label="HP" value={`${status.health.toFixed(0)} / ${status.maxHealth}`} color={healthColor} />
-        <StatRow label="Food" value={`${status.hunger.toFixed(0)} / 20`} color="text-white/40" />
+        <StatRow
+          label="HP"
+          value={status.connected ? `${status.health.toFixed(0)} / ${status.maxHealth}` : '# / #'}
+          color={healthColor}
+        />
+        <StatRow
+          label="Food"
+          value={status.connected ? `${status.hunger.toFixed(0)} / 20` : '# / #'}
+          color="text-white/40"
+        />
       </div>
 
       <div className="h-[1px] bg-white/[0.02] w-full" />
 
       <div className="grid grid-cols-3 gap-2">
-        <DataPoint label="X" value={status.position.x.toFixed(0)} />
-        <DataPoint label="Y" value={status.position.y.toFixed(0)} />
-        <DataPoint label="Z" value={status.position.z.toFixed(0)} />
+        <DataPoint label="X" value={status.connected ? status.position.x.toFixed(0) : '—'} />
+        <DataPoint label="Y" value={status.connected ? status.position.y.toFixed(0) : '—'} />
+        <DataPoint label="Z" value={status.connected ? status.position.z.toFixed(0) : '—'} />
       </div>
 
       <div className="flex justify-between items-center mt-2">
