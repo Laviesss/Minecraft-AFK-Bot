@@ -1,10 +1,18 @@
 import React, { useEffect, useRef } from 'react';
 
 const InventoryPanel: React.FC = () => {
+  const containerRef = useRef<HTMLDivElement>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
   useEffect(() => {
     console.log('[InventoryPanel] Component did mount');
+
+    if (containerRef.current) {
+      const rect = containerRef.current.getBoundingClientRect();
+      console.log('[InventoryPanel] container.getBoundingClientRect() on mount:', rect);
+    } else {
+      console.log('[InventoryPanel] container ref not available on mount');
+    }
 
     if (iframeRef.current) {
       const rect = iframeRef.current.getBoundingClientRect();
@@ -16,6 +24,7 @@ const InventoryPanel: React.FC = () => {
   }, []);
 
   const iframeSrc = '/inventory';
+  console.log(`[InventoryPanel] Assigning iframe src: ${iframeSrc}`);
 
   return (
     <div ref={containerRef} className="flex-1 bg-[#121212] border border-white/[0.04] rounded-xl flex flex-col min-h-0">

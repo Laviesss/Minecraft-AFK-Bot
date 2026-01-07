@@ -2,10 +2,18 @@ import React, { useEffect, useRef } from 'react';
 import ControlsOverlay from './ControlsOverlay';
 
 const ViewerPanel: React.FC = () => {
+  const containerRef = useRef<HTMLDivElement>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
   useEffect(() => {
     console.log('[ViewerPanel] Component did mount');
+
+    if (containerRef.current) {
+      const rect = containerRef.current.getBoundingClientRect();
+      console.log('[ViewerPanel] container.getBoundingClientRect() on mount:', rect);
+    } else {
+      console.log('[ViewerPanel] container ref not available on mount');
+    }
 
     if (iframeRef.current) {
       const rect = iframeRef.current.getBoundingClientRect();
@@ -17,6 +25,7 @@ const ViewerPanel: React.FC = () => {
   }, []);
 
   const iframeSrc = '/viewer';
+  console.log(`[ViewerPanel] Assigning iframe src: ${iframeSrc}`);
 
   return (
     <div ref={containerRef} className="flex-1 bg-[#121212] border border-white/[0.04] rounded-xl flex flex-col relative min-h-0">
