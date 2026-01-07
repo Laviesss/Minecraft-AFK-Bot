@@ -6,13 +6,11 @@ const InventoryPanel: React.FC = () => {
       <div className="p-3 px-5 border-b border-white/[0.02] flex justify-between items-center">
         <span className="text-[9px] text-white/20 uppercase tracking-widest font-medium">Inventory</span>
       </div>
-      <div className="flex-1 w-full h-full relative">
-        <iframe
-          src="/inventory"
-          className="absolute top-0 left-0 w-full h-full border-0"
-          title="Web Inventory"
-        />
-      </div>
+      <iframe
+        src="/inventory"
+        className="flex-1 w-full border-0"
+        title="Web Inventory"
+      />
     </div>
   );
 };
