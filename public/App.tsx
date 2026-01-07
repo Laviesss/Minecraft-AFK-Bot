@@ -79,7 +79,7 @@ const App: React.FC = () => {
 
   return (
     <SocketContext.Provider value={contextValue}>
-      <div className="flex flex-col h-screen w-full bg-[#0A0A0A] p-4 gap-4 overflow-hidden">
+      <div className="flex flex-col h-screen w-full bg-[#0A0A0A] p-4 gap-4">
         <Header />
         <div className="flex-1 flex w-full gap-4 min-h-0">
           <InventoryPanel />
