@@ -1,9 +1,16 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import ControlsOverlay from './ControlsOverlay';
 
 const ViewerPanel: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  const [iframeSrc, setIframeSrc] = useState('/viewer');
+
+  // Log every src change
+  useEffect(() => {
+    console.log(`[ViewerPanel] Assigning iframe src: ${iframeSrc}`);
+    fetch('/log', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ panel: 'ViewerPanel', message: 'iframe src change', data: iframeSrc }) });
+  }, [iframeSrc]);
 
   useEffect(() => {
     console.log('[ViewerPanel] Component did mount');
@@ -11,21 +18,30 @@ const ViewerPanel: React.FC = () => {
     if (containerRef.current) {
       const rect = containerRef.current.getBoundingClientRect();
       console.log('[ViewerPanel] container.getBoundingClientRect() on mount:', rect);
-    } else {
-      console.log('[ViewerPanel] container ref not available on mount');
+      fetch('/log', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ panel: 'ViewerPanel', message: 'container rect', data: rect }) });
     }
 
     if (iframeRef.current) {
       const rect = iframeRef.current.getBoundingClientRect();
       console.log('[ViewerPanel] iframe.getBoundingClientRect() on mount:', rect);
-    } else {
-      console.log('[ViewerPanel] iframe ref not available on mount');
+      fetch('/log', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ panel: 'ViewerPanel', message: 'iframe rect', data: rect }) });
+
+      const resizeObserver = new ResizeObserver(() => {
+        const newRect = iframeRef.current?.getBoundingClientRect();
+        console.log('[ViewerPanel] iframe resized:', newRect);
+        fetch('/log', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ panel: 'ViewerPanel', message: 'iframe resized', data: newRect }) });
+      });
+      resizeObserver.observe(iframeRef.current);
+      return () => resizeObserver.disconnect();
     }
 
-  }, []);
+    const ws = new WebSocket(`ws://${window.location.host}/socket.io/?EIO=4&transport=websocket`);
+    ws.onopen = () => console.log('[ViewerPanel] WebSocket opened');
+    ws.onclose = () => console.log('[ViewerPanel] WebSocket closed');
+    ws.onerror = (e) => console.log('[ViewerPanel] WebSocket error', e);
 
-  const iframeSrc = '/viewer';
-  console.log(`[ViewerPanel] Assigning iframe src: ${iframeSrc}`);
+    return () => ws.close();
+  }, []);
 
   return (
     <div ref={containerRef} className="flex-1 bg-[#121212] border border-white/[0.04] rounded-xl flex flex-col relative min-h-0">

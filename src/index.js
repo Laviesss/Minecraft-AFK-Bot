@@ -114,48 +114,25 @@ function setupProxies(config) {
     const viewerPort = config.viewerPort || 3001;
     const inventoryPort = config.inventoryPort || 3002;
 
-    console.log(`[Dashboard] Proxy /viewer -> http://localhost:${viewerPort}`);
-    console.log(`[Dashboard] Proxy /inventory -> http://localhost:${inventoryPort}`);
-
     const onProxyError = (err, req, res) => {
-        console.error(`[Proxy] Error for ${req.url}:`, err.code || err);
-        if (!res.headersSent) {
-           res.writeHead(500, { 'Content-Type': 'text/plain' }).end('Proxy error.');
-        }
+        console.error(`[Proxy] Error for ${req.url}:`, err);
+        res.writeHead(500).end('Proxy error.');
     };
 
-    // For prismarine-viewer, we need to intercept the HTML response and rewrite asset paths
     app.use('/viewer', createProxyMiddleware({
         target: `http://localhost:${viewerPort}`,
         ws: true,
         changeOrigin: true,
         pathRewrite: { '^/viewer': '' },
-        selfHandleResponse: true, // Important: allows us to modify the response
-        onProxyRes: (proxyRes, req, res) => {
-            const isHtml = proxyRes.headers['content-type'] && proxyRes.headers['content-type'].includes('text/html');
-            if (isHtml) {
-                let body = [];
-                proxyRes.on('data', chunk => body.push(chunk));
-                proxyRes.on('end', () => {
-                    let html = Buffer.concat(body).toString();
-                    // Rewrite absolute paths to be relative to /viewer
-                    html = html.replace(/(src|href)="\//g, `$1="/viewer/`);
-                    res.end(html);
-                });
-            } else {
-                proxyRes.pipe(res);
-            }
-        },
         onError: onProxyError,
         logLevel: 'debug',
     }));
 
-    // For mineflayer-web-inventory, we can use the webPath option, so a simple proxy is fine.
     app.use('/inventory', createProxyMiddleware({
         target: `http://localhost:${inventoryPort}`,
         ws: true,
         changeOrigin: true,
-        // No path rewrite needed if webPath is set correctly on the plugin
+        pathRewrite: { '^/inventory': '' },
         onError: onProxyError,
         logLevel: 'debug',
     }));
@@ -205,16 +182,8 @@ async function createBot(config) {
         try {
             const viewerPort = config.viewerPort || 3001;
             const inventoryPort = config.inventoryPort || 3002;
-
-            // Initialize viewer (no base path option)
             viewer(bot, { port: viewerPort, firstPerson: false });
-
-            // Initialize inventory with the correct webPath
-            inventoryInstance = webInventory(bot, {
-                port: inventoryPort,
-                webPath: '/inventory'
-            });
-
+            inventoryInstance = webInventory(bot, { port: inventoryPort });
             pluginsInitialized = true;
             console.log('[System] Plugins initialized successfully.');
         } catch (err) {
