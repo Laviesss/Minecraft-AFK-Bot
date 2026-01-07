@@ -1,7 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 
 const InventoryPanel: React.FC = () => {
-  const containerRef = useRef<HTMLDivElement>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
   useEffect(() => {

@@ -2,7 +2,6 @@ import React, { useEffect, useRef } from 'react';
 import ControlsOverlay from './ControlsOverlay';
 
 const ViewerPanel: React.FC = () => {
-  const containerRef = useRef<HTMLDivElement>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
   useEffect(() => {
