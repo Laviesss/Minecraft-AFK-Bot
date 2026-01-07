@@ -114,6 +114,9 @@ function setupProxies(config) {
     const viewerPort = config.viewerPort || 3001;
     const inventoryPort = config.inventoryPort || 3002;
 
+    console.log(`[Dashboard] Proxy /viewer -> http://localhost:${viewerPort}`);
+    console.log(`[Dashboard] Proxy /inventory -> http://localhost:${inventoryPort}`);
+
     const onProxyError = (err, req, res) => {
         console.error(`[Proxy] Error for ${req.url}:`, err.code || err);
         if (!res.headersSent) {
