@@ -35,6 +35,13 @@ const io = new Server(server, { path: '/socket.io' });
 app.use(express.json());
 
 // --- API Endpoints ---
+app.post('/log', (req, res) => {
+    // This endpoint is for client-side logging from the iframes.
+    console.log(`[${req.body.panel || 'Client'}]`, req.body.message, req.body.data || '');
+    res.sendStatus(200);
+});
+
+// --- API Endpoints ---
 app.get('/api/status', async (req, res) => {
     res.json({ configured: await configManager.isConfigured() });
 });
@@ -57,11 +64,6 @@ app.get('/api/discord/invite', (req, res) => {
     } else {
         res.status(503).json({ error: 'Discord bot not ready or disabled.' });
     }
-});
-
-app.post('/log', (req, res) => {
-    console.log(`[${req.body.panel}]`, req.body.message, req.body.data || '');
-    res.sendStatus(200);
 });
 
 // --- Main Start Function ---
@@ -93,7 +95,8 @@ async function startFullApplication() {
     setDiscordChannel(config);
     setupProxies(config);
 
-    // Serve static files AFTER proxies
+    // --- Static File Serving (must be after proxies) ---
+    // Serve the correct dashboard based on the environment variable
     app.get('/', (req, res) => {
         if (configManager.isDeveloperMode()) {
             res.sendFile(path.join(__dirname, '../public/simple.html'));
@@ -116,27 +119,33 @@ async function startFullApplication() {
 
 // --- Helper Functions ---
 function setupProxies(config) {
-    // Corrected ports: inventory=3001, viewer=3002
-    const inventoryPort = 3001;
-    const viewerPort = 3002;
+    // Correct mapping, accounting for swapped names in config file:
+    // Inventory service runs on 3001, which is config.viewerPort
+    // Viewer service runs on 3002, which is config.inventoryPort
+    const inventoryTargetPort = config.viewerPort || 3001;
+    const viewerTargetPort = config.inventoryPort || 3002;
 
     const onProxyError = (err, req, res) => {
         console.error(`[Proxy] Error for ${req.url}:`, err.message);
-        res.status(500).send('Error occurred while trying to proxy: ' + req.url);
+        res.status(500).send('Proxy error: ' + err.message);
     };
 
-    app.use('/inventory', createProxyMiddleware({
-        target: `http://localhost:${inventoryPort}`,
+    const commonProxyOptions = {
         ws: true,
         preserveHostHdr: true,
         onError: onProxyError,
-    }));
+    };
 
+    // --- Main Application Proxies ---
+    app.use('/inventory', createProxyMiddleware({
+        ...commonProxyOptions,
+        target: `http://localhost:${inventoryTargetPort}`,
+        pathRewrite: { '^/inventory': '' },
+    }));
     app.use('/viewer', createProxyMiddleware({
-        target: `http://localhost:${viewerPort}`,
-        ws: true,
-        preserveHostHdr: true,
-        onError: onProxyError,
+        ...commonProxyOptions,
+        target: `http://localhost:${viewerTargetPort}`,
+        pathRewrite: { '^/viewer': '' },
     }));
 }
 
