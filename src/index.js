@@ -1,4 +1,12 @@
 require('dotenv').config();
+
+// --- Stability: Unhandled Rejection Handler ---
+// Catches unhandled promise rejections from dependencies (e.g., Mineflayer)
+// and prevents them from crashing the entire application.
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('[FATAL] Unhandled Rejection at:', promise, 'reason:', reason);
+});
+
 const mineflayer = require('mineflayer');
 const http = require('http');
 const express = require('express');
@@ -93,19 +101,54 @@ async function startFullApplication() {
     }
 
     setDiscordChannel(config);
-    setupProxies(config);
 
-    // --- Static File Serving (must be after proxies) ---
-    // Serve the correct dashboard based on the environment variable
-    app.get('/', (req, res) => {
-        if (configManager.isDeveloperMode()) {
-            res.sendFile(path.join(__dirname, '../public/simple.html'));
-        } else {
-            res.sendFile(path.join(__dirname, '../public/index.html'));
+    // --- Middleware Registration (Non-Negotiable Order) ---
+
+    // 1. Proxy Middleware FIRST
+    // These routes must escape Express immediately and not be touched by any other middleware.
+    const inventoryTargetPort = config.viewerPort || 3001; // Note: Port names are swapped in config
+    const viewerTargetPort = config.inventoryPort || 3002;
+    const onProxyError = (err, req, res) => {
+        console.error(`[Proxy] Error for ${req.url}:`, err.message);
+        if (res.writeHead && !res.headersSent) {
+            res.writeHead(502);
         }
-    });
+        if (!res.headersSent) {
+            res.end('Proxy error: ' + err.message);
+        }
+    };
+
+    app.use('/inventory', createProxyMiddleware({
+        target: `http://localhost:${inventoryTargetPort}`,
+        ws: true,
+        onError: onProxyError,
+    }));
+    app.use('/viewer', createProxyMiddleware({
+        target: `http://localhost:${viewerTargetPort}`,
+        ws: true,
+        onError: onProxyError,
+    }));
+
+    // 2. React Static Assets SECOND
+    // Serve the compiled React app assets from the 'public' directory.
     app.use(express.static(path.join(__dirname, '../public')));
 
+    // 3. SPA Fallback LAST
+    // This route handles all other requests by serving the React app's entry point.
+    app.get(/(.*)/, (req, res) => {
+        // Exclude all other known routes from the fallback.
+        if (
+            req.path.startsWith('/inventory') ||
+            req.path.startsWith('/viewer') ||
+            req.path.startsWith('/socket.io') ||
+            req.path.startsWith('/api') ||
+            path.extname(req.path) // Do not serve HTML for files
+        ) {
+            return res.sendStatus(404);
+        }
+        // For any other path, serve the main index.html and let React Router handle it.
+        res.sendFile(path.join(__dirname, '../public/index.html'));
+    });
 
     const mainPort = config.mainDashboardPort || 8080;
     server.listen(mainPort, () => {
@@ -113,41 +156,10 @@ async function startFullApplication() {
         console.log(`[Dashboard] Main dashboard listening on ${localUrl}`);
     });
 
-
     createBot(config);
 }
 
 // --- Helper Functions ---
-function setupProxies(config) {
-    // Correct mapping, accounting for swapped names in config file:
-    // Inventory service runs on 3001, which is config.viewerPort
-    // Viewer service runs on 3002, which is config.inventoryPort
-    const inventoryTargetPort = config.viewerPort || 3001;
-    const viewerTargetPort = config.inventoryPort || 3002;
-
-    const onProxyError = (err, req, res) => {
-        console.error(`[Proxy] Error for ${req.url}:`, err.message);
-        res.status(500).send('Proxy error: ' + err.message);
-    };
-
-    const commonProxyOptions = {
-        ws: true,
-        preserveHostHdr: true,
-        onError: onProxyError,
-    };
-
-    // --- Main Application Proxies ---
-    app.use('/inventory', createProxyMiddleware({
-        ...commonProxyOptions,
-        target: `http://localhost:${inventoryTargetPort}`,
-        pathRewrite: { '^/inventory': '' },
-    }));
-    app.use('/viewer', createProxyMiddleware({
-        ...commonProxyOptions,
-        target: `http://localhost:${viewerTargetPort}`,
-        pathRewrite: { '^/viewer': '' },
-    }));
-}
 
 function shutdownPlugins() {
     if (viewerInstance) viewerInstance.close();
