@@ -1,4 +1,12 @@
 require('dotenv').config();
+
+// --- Stability: Unhandled Rejection Handler ---
+// Catches unhandled promise rejections from dependencies (e.g., Mineflayer)
+// and prevents them from crashing the entire application.
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('[FATAL] Unhandled Rejection at:', promise, 'reason:', reason);
+});
+
 const mineflayer = require('mineflayer');
 const http = require('http');
 const express = require('express');
@@ -93,18 +101,42 @@ async function startFullApplication() {
     }
 
     setDiscordChannel(config);
-    setupProxies(config);
 
-    // --- Static File Serving & SPA Fallback (must be after proxies) ---
-    // Serve static assets from the 'public' directory. This must come before the catch-all.
+    // --- Middleware Registration (Order is Critical) ---
+
+    // 1. Proxy Middleware (Must be first)
+    const inventoryTargetPort = config.viewerPort || 3001; // Note: Port names are swapped in config
+    const viewerTargetPort = config.inventoryPort || 3002;
+    const onProxyError = (err, req, res) => {
+        console.error(`[Proxy] Error for ${req.url}:`, err.message);
+        if (res.writeHead && !res.headersSent) {
+            res.writeHead(502);
+        }
+        if (res.end) {
+            res.end('Proxy error: ' + err.message);
+        }
+    };
+    app.use('/inventory', createProxyMiddleware({
+        target: `http://localhost:${inventoryTargetPort}`,
+        pathRewrite: { '^/inventory': '' },
+        ws: true,
+        onError: onProxyError,
+    }));
+    app.use('/viewer', createProxyMiddleware({
+        target: `http://localhost:${viewerTargetPort}`,
+        pathRewrite: { '^/viewer': '' },
+        ws: true,
+        onError: onProxyError,
+    }));
+
+    // 2. Static File Serving
     app.use(express.static(path.join(__dirname, '../public')));
 
-    // For any request that doesn't match a static file or a proxy, serve the main HTML file.
-    // This enables client-side routing for the SPA.
+    // 3. SPA Fallback (Must be last)
     app.get(/(.*)/, (req, res) => {
-        // Exclude API routes from being served the index.html
-        if (req.path.startsWith('/api/') || req.path.startsWith('/socket.io/')) {
-            return res.status(404).send('Not found');
+        // Exclude API, socket, and proxy routes from the SPA fallback
+        if (req.path.startsWith('/api/') || req.path.startsWith('/socket.io/') || req.path.startsWith('/inventory') || req.path.startsWith('/viewer')) {
+            return res.status(404).send('Not Found');
         }
         if (configManager.isDeveloperMode()) {
             res.sendFile(path.join(__dirname, '../public/simple.html'));
@@ -113,48 +145,16 @@ async function startFullApplication() {
         }
     });
 
-
     const mainPort = config.mainDashboardPort || 8080;
     server.listen(mainPort, () => {
         const localUrl = `http://localhost:${mainPort}`;
         console.log(`[Dashboard] Main dashboard listening on ${localUrl}`);
     });
 
-
     createBot(config);
 }
 
 // --- Helper Functions ---
-function setupProxies(config) {
-    // Correct mapping, accounting for swapped names in config file:
-    // Inventory service runs on 3001, which is config.viewerPort
-    // Viewer service runs on 3002, which is config.inventoryPort
-    const inventoryTargetPort = config.viewerPort || 3001;
-    const viewerTargetPort = config.inventoryPort || 3002;
-
-    const onProxyError = (err, req, res) => {
-        console.error(`[Proxy] Error for ${req.url}:`, err.message);
-        res.status(500).send('Proxy error: ' + err.message);
-    };
-
-    const commonProxyOptions = {
-        ws: true,
-        preserveHostHdr: true,
-        onError: onProxyError,
-    };
-
-    // --- Main Application Proxies ---
-    app.use('/inventory', createProxyMiddleware({
-        ...commonProxyOptions,
-        target: `http://localhost:${inventoryTargetPort}`,
-        pathRewrite: { '^/inventory': '' },
-    }));
-    app.use('/viewer', createProxyMiddleware({
-        ...commonProxyOptions,
-        target: `http://localhost:${viewerTargetPort}`,
-        pathRewrite: { '^/viewer': '' },
-    }));
-}
 
 function shutdownPlugins() {
     if (viewerInstance) viewerInstance.close();
