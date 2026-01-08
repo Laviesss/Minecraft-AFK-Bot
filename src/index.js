@@ -132,7 +132,17 @@ async function startFullApplication() {
     // 2. Static File Serving
     app.use(express.static(path.join(__dirname, '../public')));
 
-    // 3. SPA Fallback (Must be last)
+    // 3. Iframe HTML Overrides
+    // Serve the main React app HTML for the iframe routes. This ensures the iframes
+    // load the modern frontend instead of the legacy plugin HTML.
+    app.get('/inventory', (req, res) => {
+        res.sendFile(path.join(__dirname, '../public/index.html'));
+    });
+    app.get('/viewer', (req, res) => {
+        res.sendFile(path.join(__dirname, '../public/index.html'));
+    });
+
+    // 4. SPA Fallback (Must be last)
     app.get(/(.*)/, (req, res) => {
         if (
             req.path.startsWith('/api') ||
