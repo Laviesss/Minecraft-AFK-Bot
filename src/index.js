@@ -102,9 +102,10 @@ async function startFullApplication() {
 
     setDiscordChannel(config);
 
-    // --- Middleware Registration (Order is Critical) ---
+    // --- Middleware Registration (Non-Negotiable Order) ---
 
-    // 1. Proxy Middleware (Must be first)
+    // 1. Proxy Middleware FIRST
+    // These routes must escape Express immediately and not be touched by any other middleware.
     const inventoryTargetPort = config.viewerPort || 3001; // Note: Port names are swapped in config
     const viewerTargetPort = config.inventoryPort || 3002;
     const onProxyError = (err, req, res) => {
@@ -112,49 +113,40 @@ async function startFullApplication() {
         if (res.writeHead && !res.headersSent) {
             res.writeHead(502);
         }
-        if (res.end) {
+        if (!res.headersSent) {
             res.end('Proxy error: ' + err.message);
         }
     };
+
     app.use('/inventory', createProxyMiddleware({
         target: `http://localhost:${inventoryTargetPort}`,
-        pathRewrite: { '^/inventory': '' },
         ws: true,
         onError: onProxyError,
     }));
     app.use('/viewer', createProxyMiddleware({
         target: `http://localhost:${viewerTargetPort}`,
-        pathRewrite: { '^/viewer': '' },
         ws: true,
         onError: onProxyError,
     }));
 
-    // 2. Static File Serving
+    // 2. React Static Assets SECOND
+    // Serve the compiled React app assets from the 'public' directory.
     app.use(express.static(path.join(__dirname, '../public')));
 
-    // 3. Iframe HTML Overrides
-    // Serve the main React app HTML for the iframe routes. This ensures the iframes
-    // load the modern frontend instead of the legacy plugin HTML.
-    app.get('/inventory', (req, res) => {
-        res.sendFile(path.join(__dirname, '../public/index.html'));
-    });
-    app.get('/viewer', (req, res) => {
-        res.sendFile(path.join(__dirname, '../public/index.html'));
-    });
-
-    // 4. SPA Fallback (Must be last)
+    // 3. SPA Fallback LAST
+    // This route handles all other requests by serving the React app's entry point.
     app.get(/(.*)/, (req, res) => {
+        // Exclude all other known routes from the fallback.
         if (
-            req.path.startsWith('/api') ||
-            req.path.startsWith('/socket.io') ||
             req.path.startsWith('/inventory') ||
             req.path.startsWith('/viewer') ||
-            path.extname(req.path) // Exclude files
+            req.path.startsWith('/socket.io') ||
+            req.path.startsWith('/api') ||
+            path.extname(req.path) // Do not serve HTML for files
         ) {
             return res.sendStatus(404);
         }
-
-        // For any other request, serve the main index.html file.
+        // For any other path, serve the main index.html and let React Router handle it.
         res.sendFile(path.join(__dirname, '../public/index.html'));
     });
 
@@ -211,15 +203,10 @@ async function createBot(config) {
         console.log('[Bot] Spawn event fired. Initializing plugins...');
         if (pluginsInitialized) return;
         try {
-            // IMPORTANT: The config file has swapped port names.
-            // config.viewerPort is for the inventory service.
-            // config.inventoryPort is for the viewer service.
-            const inventoryServicePort = config.viewerPort || 3001;
-            const viewerServicePort = config.inventoryPort || 3002;
-
-            // Start the plugins on their correct ports according to the proxy config.
-            viewer(bot, { port: viewerServicePort, firstPerson: false });
-            inventoryInstance = webInventory(bot, { port: inventoryServicePort });
+            const viewerPort = config.viewerPort || 3001;
+            const inventoryPort = config.inventoryPort || 3002;
+            viewer(bot, { port: viewerPort, firstPerson: false });
+            inventoryInstance = webInventory(bot, { port: inventoryPort });
             pluginsInitialized = true;
             console.log('[System] Plugins initialized successfully.');
         } catch (err) {
