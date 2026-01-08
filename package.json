@@ -4,8 +4,8 @@
   "description": "A Node.js Minecraft AFK bot using Mineflayer for Render",
   "main": "index.js",
   "scripts": {
-    "start": "npm run build && node index.js",
-    "build": "esbuild public/index.tsx --bundle --outfile=public/bundle.js --loader:.tsx=tsx --resolve-extensions=.tsx,.ts,.js"
+    "build:frontend": "node build-frontend.js",
+    "start": "npm run build:frontend && node src/index.js"
   },
   "dependencies": {
     "canvas": "^3.2.0",

@@ -134,24 +134,18 @@ async function startFullApplication() {
 
     // 3. SPA Fallback (Must be last)
     app.get(/(.*)/, (req, res) => {
-        // This is the SPA fallback. It should only run for non-asset, non-API requests.
-
-        // Exclude API, socket, and proxy routes.
-        if (req.path.startsWith('/api/') || req.path.startsWith('/socket.io/') || req.path.startsWith('/inventory') || req.path.startsWith('/viewer')) {
-            return res.status(404).send('Not Found');
+        if (
+            req.path.startsWith('/api') ||
+            req.path.startsWith('/socket.io') ||
+            req.path.startsWith('/inventory') ||
+            req.path.startsWith('/viewer') ||
+            path.extname(req.path) // Exclude files
+        ) {
+            return res.sendStatus(404);
         }
 
-        // Exclude requests that look like files (contain a file extension).
-        if (path.extname(req.path)) {
-            return res.status(404).send('Not Found');
-        }
-
-        // If the request is not for an asset or API, serve the appropriate HTML.
-        if (configManager.isDeveloperMode()) {
-            res.sendFile(path.join(__dirname, '../public/simple.html'));
-        } else {
-            res.sendFile(path.join(__dirname, '../public/index.html'));
-        }
+        // For any other request, serve the main index.html file.
+        res.sendFile(path.join(__dirname, '../public/index.html'));
     });
 
     const mainPort = config.mainDashboardPort || 8080;
