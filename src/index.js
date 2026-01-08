@@ -34,16 +34,12 @@ const io = new Server(server, { path: '/socket.io' });
 
 app.use(express.json());
 
-// Serve the correct dashboard based on the environment variable
-app.get('/', (req, res) => {
-    if (configManager.isDeveloperMode()) {
-        res.sendFile(path.join(__dirname, '../public/simple.html'));
-    } else {
-        res.sendFile(path.join(__dirname, '../public/index.html'));
-    }
+// --- API Endpoints ---
+app.post('/log', (req, res) => {
+    // This endpoint is for client-side logging from the iframes.
+    console.log(`[${req.body.panel || 'Client'}]`, req.body.message, req.body.data || '');
+    res.sendStatus(200);
 });
-
-app.use(express.static(path.join(__dirname, '../public')));
 
 // --- API Endpoints ---
 app.get('/api/status', async (req, res) => {
@@ -99,6 +95,18 @@ async function startFullApplication() {
     setDiscordChannel(config);
     setupProxies(config);
 
+    // --- Static File Serving (must be after proxies) ---
+    // Serve the correct dashboard based on the environment variable
+    app.get('/', (req, res) => {
+        if (configManager.isDeveloperMode()) {
+            res.sendFile(path.join(__dirname, '../public/simple.html'));
+        } else {
+            res.sendFile(path.join(__dirname, '../public/index.html'));
+        }
+    });
+    app.use(express.static(path.join(__dirname, '../public')));
+
+
     const mainPort = config.mainDashboardPort || 8080;
     server.listen(mainPort, () => {
         const localUrl = `http://localhost:${mainPort}`;
@@ -111,30 +119,33 @@ async function startFullApplication() {
 
 // --- Helper Functions ---
 function setupProxies(config) {
-    const viewerPort = config.viewerPort || 3001;
-    const inventoryPort = config.inventoryPort || 3002;
+    // Correct mapping, accounting for swapped names in config file:
+    // Inventory service runs on 3001, which is config.viewerPort
+    // Viewer service runs on 3002, which is config.inventoryPort
+    const inventoryTargetPort = config.viewerPort || 3001;
+    const viewerTargetPort = config.inventoryPort || 3002;
 
     const onProxyError = (err, req, res) => {
-        console.error(`[Proxy] Error for ${req.url}:`, err);
-        res.writeHead(500).end('Proxy error.');
+        console.error(`[Proxy] Error for ${req.url}:`, err.message);
+        res.status(500).send('Proxy error: ' + err.message);
     };
 
-    app.use('/viewer', createProxyMiddleware({
-        target: `http://localhost:${viewerPort}`,
+    const commonProxyOptions = {
         ws: true,
-        changeOrigin: true,
-        pathRewrite: { '^/viewer': '' },
+        preserveHostHdr: true,
         onError: onProxyError,
-        logLevel: 'debug',
-    }));
+    };
 
+    // --- Main Application Proxies ---
     app.use('/inventory', createProxyMiddleware({
-        target: `http://localhost:${inventoryPort}`,
-        ws: true,
-        changeOrigin: true,
+        ...commonProxyOptions,
+        target: `http://localhost:${inventoryTargetPort}`,
         pathRewrite: { '^/inventory': '' },
-        onError: onProxyError,
-        logLevel: 'debug',
+    }));
+    app.use('/viewer', createProxyMiddleware({
+        ...commonProxyOptions,
+        target: `http://localhost:${viewerTargetPort}`,
+        pathRewrite: { '^/viewer': '' },
     }));
 }
 
