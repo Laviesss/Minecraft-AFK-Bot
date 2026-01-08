@@ -8,6 +8,7 @@ const ViewerPanel: React.FC = () => {
         src="/viewer"
         className="flex-1 w-full border-0"
         title="Prismarine Viewer"
+        data-testid="viewer-iframe"
       />
       <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
         <div className="relative w-full h-full">

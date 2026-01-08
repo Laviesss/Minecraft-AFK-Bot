@@ -105,49 +105,54 @@ async function startFullApplication() {
     // --- Middleware Registration (Non-Negotiable Order) ---
 
     // 1. Proxy Middleware FIRST
-    // These routes must escape Express immediately and not be touched by any other middleware.
-    const inventoryTargetPort = config.viewerPort || 3001; // Note: Port names are swapped in config
+    // These routes must be isolated and handled before any other middleware.
+    const inventoryTargetPort = config.viewerPort || 3001;
     const viewerTargetPort = config.inventoryPort || 3002;
+
     const onProxyError = (err, req, res) => {
-        console.error(`[Proxy] Error for ${req.url}:`, err.message);
+        console.error(`[Proxy] Error for ${req.url}:`, err.code || err.message);
         if (res.writeHead && !res.headersSent) {
-            res.writeHead(502);
+            res.writeHead(502, { 'Content-Type': 'text/plain' });
         }
         if (!res.headersSent) {
-            res.end('Proxy error: ' + err.message);
+            res.end('Proxy error: Could not connect to plugin service.');
         }
     };
 
     app.use('/inventory', createProxyMiddleware({
         target: `http://localhost:${inventoryTargetPort}`,
         ws: true,
+        pathRewrite: { '^/inventory': '' }, // Isolate plugin path by rewriting the base path.
         onError: onProxyError,
     }));
+
     app.use('/viewer', createProxyMiddleware({
         target: `http://localhost:${viewerTargetPort}`,
         ws: true,
+        pathRewrite: { '^/viewer': '' }, // Isolate plugin path by rewriting the base path.
         onError: onProxyError,
     }));
 
     // 2. React Static Assets SECOND
     // Serve the compiled React app assets from the 'public' directory.
-    app.use(express.static(path.join(__dirname, '../public')));
+    const publicDir = path.join(__dirname, '../public');
+    app.use(express.static(publicDir));
 
     // 3. SPA Fallback LAST
-    // This route handles all other requests by serving the React app's entry point.
+    // This route MUST come after all other routes (proxies, static files, APIs).
     app.get(/(.*)/, (req, res) => {
-        // Exclude all other known routes from the fallback.
+        // Exclude specific backend routes from being handled by the SPA.
         if (
             req.path.startsWith('/inventory') ||
             req.path.startsWith('/viewer') ||
             req.path.startsWith('/socket.io') ||
-            req.path.startsWith('/api') ||
-            path.extname(req.path) // Do not serve HTML for files
+            req.path.startsWith('/api')
         ) {
             return res.sendStatus(404);
         }
+
         // For any other path, serve the main index.html and let React Router handle it.
-        res.sendFile(path.join(__dirname, '../public/index.html'));
+        res.sendFile(path.join(publicDir, 'index.html'));
     });
 
     const mainPort = config.mainDashboardPort || 8080;
@@ -200,18 +205,27 @@ async function createBot(config) {
     }
 
     bot.once('spawn', () => {
+        // IMPORTANT: The viewer and inventory web servers are only initialized AFTER the bot
+        // successfully connects to the Minecraft server and the 'spawn' event is emitted.
+        // Until then, the Express proxies for /viewer and /inventory will correctly fail
+        // with connection errors, which is the expected behavior when the bot is offline.
         console.log('[Bot] Spawn event fired. Initializing plugins...');
         if (pluginsInitialized) return;
         try {
-            const viewerPort = config.viewerPort || 3001;
-            const inventoryPort = config.inventoryPort || 3002;
+            // Correctly assign ports based on the configuration.
+            const viewerPort = config.inventoryPort || 3002; // Viewer plugin runs on the inventoryPort from config
+            const inventoryPort = config.viewerPort || 3001;   // Inventory plugin runs on the viewerPort from config
+
+            console.log(`[System] Initializing Viewer on port ${viewerPort} and Inventory on port ${inventoryPort}.`);
+
             viewer(bot, { port: viewerPort, firstPerson: false });
             inventoryInstance = webInventory(bot, { port: inventoryPort });
+
             pluginsInitialized = true;
             console.log('[System] Plugins initialized successfully.');
         } catch (err) {
-            console.error('[System] CRITICAL: Plugin initialization failed. Exiting.', err);
-            process.exit(1);
+            console.error('[System] CRITICAL: Plugin initialization failed.', err);
+            // Do not exit the process, to allow for reconnection attempts.
         }
     });
 
