@@ -95,16 +95,23 @@ async function startFullApplication() {
     setDiscordChannel(config);
     setupProxies(config);
 
-    // --- Static File Serving (must be after proxies) ---
-    // Serve the correct dashboard based on the environment variable
-    app.get('/', (req, res) => {
+    // --- Static File Serving & SPA Fallback (must be after proxies) ---
+    // Serve static assets from the 'public' directory. This must come before the catch-all.
+    app.use(express.static(path.join(__dirname, '../public')));
+
+    // For any request that doesn't match a static file or a proxy, serve the main HTML file.
+    // This enables client-side routing for the SPA.
+    app.get(/(.*)/, (req, res) => {
+        // Exclude API routes from being served the index.html
+        if (req.path.startsWith('/api/') || req.path.startsWith('/socket.io/')) {
+            return res.status(404).send('Not found');
+        }
         if (configManager.isDeveloperMode()) {
             res.sendFile(path.join(__dirname, '../public/simple.html'));
         } else {
             res.sendFile(path.join(__dirname, '../public/index.html'));
         }
     });
-    app.use(express.static(path.join(__dirname, '../public')));
 
 
     const mainPort = config.mainDashboardPort || 8080;
@@ -191,10 +198,15 @@ async function createBot(config) {
         console.log('[Bot] Spawn event fired. Initializing plugins...');
         if (pluginsInitialized) return;
         try {
-            const viewerPort = config.viewerPort || 3001;
-            const inventoryPort = config.inventoryPort || 3002;
-            viewer(bot, { port: viewerPort, firstPerson: false });
-            inventoryInstance = webInventory(bot, { port: inventoryPort });
+            // IMPORTANT: The config file has swapped port names.
+            // config.viewerPort is for the inventory service.
+            // config.inventoryPort is for the viewer service.
+            const inventoryServicePort = config.viewerPort || 3001;
+            const viewerServicePort = config.inventoryPort || 3002;
+
+            // Start the plugins on their correct ports according to the proxy config.
+            viewer(bot, { port: viewerServicePort, firstPerson: false });
+            inventoryInstance = webInventory(bot, { port: inventoryServicePort });
             pluginsInitialized = true;
             console.log('[System] Plugins initialized successfully.');
         } catch (err) {
