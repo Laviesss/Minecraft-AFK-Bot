@@ -1,10 +1,10 @@
 {
   "serverAddress": "localhost",
   "serverPort": "25565",
-  "authMethod": "mojang",
+  "authMethod": "offline",
   "botUsername": "testbot",
   "serverPassword": "",
-  "serverVersion": "1.18.2",
+  "serverVersion": "",
   "discordChannelId": "",
   "useProxy": false,
   "mainDashboardPort": "8080",
