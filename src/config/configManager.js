@@ -1,7 +1,7 @@
 const fs = require('fs').promises;
 const path = require('path');
 
-const CONFIG_PATH = path.join(__dirname, '..', 'bot-config.json');
+const CONFIG_PATH = path.join(__dirname, '..', '..', 'bot-config.json');
 
 let currentConfig = null;
 
