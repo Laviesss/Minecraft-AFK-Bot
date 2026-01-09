@@ -98,7 +98,6 @@ async function startFullApplication() {
 
     setDiscordChannel(config);
 
-    // --- Middleware Registration (Non-Negotiable Order) ---
     const inventoryTargetPort = parseInt(config.inventoryPort, 10) || 3002;
     const viewerTargetPort = parseInt(config.viewerPort, 10) || 3001;
 
@@ -107,14 +106,9 @@ async function startFullApplication() {
         if (res.writeHead && !res.headersSent) {
             res.writeHead(502, { 'Content-Type': 'text/plain' });
         }
-        if (!res.headersSent) {
-            res.end('Proxy error: Could not connect to plugin service.');
-        }
+        if (!res.headersSent) res.end('Proxy error: Could not connect to plugin service.');
     };
 
-    // --- Plugin-Ready Middleware ---
-    // This middleware checks if the bot's plugins are ready before proxying.
-    // If not, it returns a 503 Service Unavailable error.
     const requirePluginsInitialized = (req, res, next) => {
         if (!pluginsInitialized) {
             return res.status(503).send('Bot is not ready yet. Please try again in a moment.');
@@ -136,16 +130,11 @@ async function startFullApplication() {
         onError: onProxyError,
     }));
 
-    // --- React Static Assets ---
-    // Serve the built React app's static files.
     const publicDir = path.join(__dirname, '../public');
     app.use(express.static(publicDir));
 
-    // --- SPA Fallback ---
-    // This MUST be the last route. It sends the main index.html for any
-    // request that hasn't been handled by a previous route (e.g., API, proxy, static files).
-    // This allows the React Router to handle client-side routing.
-    app.get('*', (req, res, next) => {
+    // SPA Fallback fixed
+    app.get('/*splat', (req, res, next) => {
         const excluded = ['/inventory', '/viewer', '/socket.io', '/api'];
         if (excluded.some(prefix => req.path.startsWith(prefix))) return next();
         res.sendFile(path.join(publicDir, 'index.html'));
