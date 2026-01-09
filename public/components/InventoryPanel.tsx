@@ -10,7 +10,6 @@ const InventoryPanel: React.FC = () => {
         src="/inventory"
         className="flex-1 w-full border-0"
         title="Web Inventory"
-        data-testid="inventory-iframe"
       />
     </div>
   );
