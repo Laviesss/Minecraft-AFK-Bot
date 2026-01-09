@@ -1,8 +1,6 @@
 require('dotenv').config();
 
 // --- Stability: Unhandled Rejection Handler ---
-// Catches unhandled promise rejections from dependencies (e.g., Mineflayer)
-// and prevents them from crashing the entire application.
 process.on('unhandledRejection', (reason, promise) => {
   console.error('[FATAL] Unhandled Rejection at:', promise, 'reason:', reason);
 });
@@ -44,12 +42,10 @@ app.use(express.json());
 
 // --- API Endpoints ---
 app.post('/log', (req, res) => {
-    // This endpoint is for client-side logging from the iframes.
     console.log(`[${req.body.panel || 'Client'}]`, req.body.message, req.body.data || '');
     res.sendStatus(200);
 });
 
-// --- API Endpoints ---
 app.get('/api/status', async (req, res) => {
     res.json({ configured: await configManager.isConfigured() });
 });
@@ -77,7 +73,7 @@ app.get('/api/discord/invite', (req, res) => {
 // --- Main Start Function ---
 async function start() {
     console.log('[System] Starting application...');
-    await initDiscord(botState); // Initialize Discord immediately
+    await initDiscord(botState);
 
     if (await configManager.isConfigured()) {
         startFullApplication();
@@ -103,64 +99,67 @@ async function startFullApplication() {
     setDiscordChannel(config);
 
     // --- Middleware Registration (Non-Negotiable Order) ---
+    const inventoryTargetPort = parseInt(config.inventoryPort, 10) || 3002;
+    const viewerTargetPort = parseInt(config.viewerPort, 10) || 3001;
 
-    // 1. Proxy Middleware FIRST
-    // These routes must escape Express immediately and not be touched by any other middleware.
-    const inventoryTargetPort = config.viewerPort || 3001; // Note: Port names are swapped in config
-    const viewerTargetPort = config.inventoryPort || 3002;
     const onProxyError = (err, req, res) => {
-        console.error(`[Proxy] Error for ${req.url}:`, err.message);
+        console.error(`[Proxy] Error for ${req.url}:`, err.code || err.message);
         if (res.writeHead && !res.headersSent) {
-            res.writeHead(502);
+            res.writeHead(502, { 'Content-Type': 'text/plain' });
         }
         if (!res.headersSent) {
-            res.end('Proxy error: ' + err.message);
+            res.end('Proxy error: Could not connect to plugin service.');
         }
     };
 
-    app.use('/inventory', createProxyMiddleware({
+    // --- Plugin-Ready Middleware ---
+    // This middleware checks if the bot's plugins are ready before proxying.
+    // If not, it returns a 503 Service Unavailable error.
+    const requirePluginsInitialized = (req, res, next) => {
+        if (!pluginsInitialized) {
+            return res.status(503).send('Bot is not ready yet. Please try again in a moment.');
+        }
+        next();
+    };
+
+    app.use('/inventory', requirePluginsInitialized, createProxyMiddleware({
         target: `http://localhost:${inventoryTargetPort}`,
         ws: true,
+        pathRewrite: { '^/inventory': '' },
         onError: onProxyError,
     }));
-    app.use('/viewer', createProxyMiddleware({
+
+    app.use('/viewer', requirePluginsInitialized, createProxyMiddleware({
         target: `http://localhost:${viewerTargetPort}`,
         ws: true,
+        pathRewrite: { '^/viewer': '' },
         onError: onProxyError,
     }));
 
-    // 2. React Static Assets SECOND
-    // Serve the compiled React app assets from the 'public' directory.
-    app.use(express.static(path.join(__dirname, '../public')));
+    // --- React Static Assets ---
+    // Serve the built React app's static files.
+    const publicDir = path.join(__dirname, '../public');
+    app.use(express.static(publicDir));
 
-    // 3. SPA Fallback LAST
-    // This route handles all other requests by serving the React app's entry point.
-    app.get(/(.*)/, (req, res) => {
-        // Exclude all other known routes from the fallback.
-        if (
-            req.path.startsWith('/inventory') ||
-            req.path.startsWith('/viewer') ||
-            req.path.startsWith('/socket.io') ||
-            req.path.startsWith('/api') ||
-            path.extname(req.path) // Do not serve HTML for files
-        ) {
-            return res.sendStatus(404);
-        }
-        // For any other path, serve the main index.html and let React Router handle it.
-        res.sendFile(path.join(__dirname, '../public/index.html'));
+    // --- SPA Fallback ---
+    // This MUST be the last route. It sends the main index.html for any
+    // request that hasn't been handled by a previous route (e.g., API, proxy, static files).
+    // This allows the React Router to handle client-side routing.
+    app.get('*', (req, res, next) => {
+        const excluded = ['/inventory', '/viewer', '/socket.io', '/api'];
+        if (excluded.some(prefix => req.path.startsWith(prefix))) return next();
+        res.sendFile(path.join(publicDir, 'index.html'));
     });
 
     const mainPort = config.mainDashboardPort || 8080;
     server.listen(mainPort, () => {
-        const localUrl = `http://localhost:${mainPort}`;
-        console.log(`[Dashboard] Main dashboard listening on ${localUrl}`);
+        console.log(`[Dashboard] Main dashboard listening on http://localhost:${mainPort}`);
     });
 
     createBot(config);
 }
 
 // --- Helper Functions ---
-
 function shutdownPlugins() {
     if (viewerInstance) viewerInstance.close();
     if (inventoryInstance) inventoryInstance.close();
@@ -200,18 +199,20 @@ async function createBot(config) {
     }
 
     bot.once('spawn', () => {
-        console.log('[Bot] Spawn event fired. Initializing plugins...');
         if (pluginsInitialized) return;
         try {
-            const viewerPort = config.viewerPort || 3001;
-            const inventoryPort = config.inventoryPort || 3002;
+            const viewerPort = parseInt(config.viewerPort, 10) || 3001;
+            const inventoryPort = parseInt(config.inventoryPort, 10) || 3002;
+
+            console.log(`[System] Initializing Viewer on port ${viewerPort} and Inventory on port ${inventoryPort}.`);
+
             viewer(bot, { port: viewerPort, firstPerson: false });
             inventoryInstance = webInventory(bot, { port: inventoryPort });
+
             pluginsInitialized = true;
             console.log('[System] Plugins initialized successfully.');
         } catch (err) {
-            console.error('[System] CRITICAL: Plugin initialization failed. Exiting.', err);
-            process.exit(1);
+            console.error('[System] CRITICAL: Plugin initialization failed.', err);
         }
     });
 
@@ -238,7 +239,6 @@ function attachBotListeners(config) {
 
     bot.on('error', (err) => {
         console.error('[Bot] A bot error occurred:', err);
-        // Also send a system message to the dashboard
         io.emit('chat-message', {
             sender: 'System',
             message: `Bot connection error: ${err.message || err.code}`,
@@ -249,7 +249,7 @@ function attachBotListeners(config) {
 
     bot.on('message', (jsonMsg) => {
         const message = jsonMsg.toString().trim();
-        if (!message) return; // Don't send empty messages
+        if (!message) return;
         console.log(`[Chat] Broadcasting: ${message}`);
         io.emit('chat-message', { message });
     });
@@ -264,15 +264,12 @@ function attachBotListeners(config) {
         });
     });
 
-    // Periodically send state to the dashboard
     setInterval(() => {
         if (!bot || !botState.isOnline) return;
         botState.health = bot.health;
         botState.maxHealth = bot.maxHealth;
         botState.hunger = bot.food;
-        if (bot.entity) {
-            botState.position = bot.entity.position.floored();
-        }
+        if (bot.entity) botState.position = bot.entity.position.floored();
         io.emit('bot-state', botState)
     }, 1000);
 }
@@ -280,7 +277,7 @@ function attachBotListeners(config) {
 // --- Socket.IO Listeners ---
 io.on('connection', (socket) => {
     console.log(`[Socket] New connection: ${socket.id}`);
-    socket.emit('bot-state', botState); // Send initial state
+    socket.emit('bot-state', botState);
 
     socket.on('send-chat-message', ({ message }) => {
         if (bot && botState.isOnline && message) bot.chat(message);
@@ -305,8 +302,6 @@ io.on('connection', (socket) => {
 });
 
 // --- Graceful Shutdown ---
-process.on('SIGINT', async () => {
-    process.exit(0);
-});
+process.on('SIGINT', async () => process.exit(0));
 
 start();
